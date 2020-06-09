@@ -1,5 +1,6 @@
 // Heap for min. can change to support max and no only for Int, also other class
 class Heap(vararg number: Int) {
+
     var list: MutableList<Int> = mutableListOf()
 
     init {
@@ -8,8 +9,10 @@ class Heap(vararg number: Int) {
         }
     }
 
+    // Insert a new value.
     fun insert(int: Int): MutableList<Int> {
-
+        
+        // Insert to last one.
         list.add(list.size, int)
         var newIntIndex = list.size - 1
 
@@ -20,7 +23,8 @@ class Heap(vararg number: Int) {
             }
             newIntIndex = (newIntIndex - 1) / 2
         }
-
+        
+        // Return inserted list
         return list
     }
 
@@ -30,7 +34,8 @@ class Heap(vararg number: Int) {
         return list[list.size - 1]
     }
 
-    fun reRange(): MutableList<Int> {
+    // After swap first and last, rearrange heap list.
+    fun reArrange(): MutableList<Int> {
 
         // Remove the min value
         list.removeAt(list.size-1)
