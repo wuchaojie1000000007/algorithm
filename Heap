@@ -1,0 +1,89 @@
+// Heap for min. can change to support max and no only for Int, also other class
+class Heap(vararg number: Int) {
+    var list: MutableList<Int> = mutableListOf()
+
+    init {
+        for (num in number) {
+            insert(num)
+        }
+    }
+
+    fun insert(int: Int): MutableList<Int> {
+
+        list.add(list.size, int)
+        var newIntIndex = list.size - 1
+
+        // If child smaller than parent, then bubble up
+        while (list[newIntIndex] < list[(newIntIndex - 1) / 2]) {
+            list[newIntIndex] = list[(newIntIndex - 1) / 2].also {
+                list[(newIntIndex - 1) / 2] = list[newIntIndex]
+            }
+            newIntIndex = (newIntIndex - 1) / 2
+        }
+
+        return list
+    }
+
+    // Just change the value and reture, did not delete the min value
+    fun popMin(): Int {
+        list[0] = list[list.size - 1].also({ list[list.size - 1] = list[0] })
+        return list[list.size - 1]
+    }
+
+    fun reRange(): MutableList<Int> {
+
+        // Remove the min value
+        list.removeAt(list.size-1)
+
+        // Init loop
+        var newIndex = 0
+
+        // Check if have left child
+        while (2 * newIndex + 1 < list.size) {
+            when {
+
+                // Check if have right child and bigger than minof child
+                2 * newIndex + 2 < list.size && list[newIndex] > minOf(
+                    list[2 * newIndex + 1],
+                    list[2 * newIndex + 2]
+                ) ->
+                    when {
+
+                        // Swap left child
+                        list[2 * newIndex + 1] < list[2 * newIndex + 2] -> {
+                            list[newIndex] =
+                                list[2 * newIndex + 1].also {
+                                    list[2 * newIndex + 1] = list[newIndex]
+                                }
+                            newIndex = 2 * newIndex + 1
+                        }
+
+                        // Swap right child
+                        list[2 * newIndex + 1] >= list[2 * newIndex + 2] -> {
+                            list[newIndex] =
+                                list[2 * newIndex + 2].also {
+                                    list[2 * newIndex + 2] = list[newIndex]
+                                }
+                            newIndex = 2 * newIndex + 2
+                        }
+                    }
+
+                // Only have left child and bigger than it
+                2 * newIndex + 1 == list.size &&  list[newIndex] > list[2 * newIndex + 1] -> {
+
+                    // Swap left child
+                    list[newIndex] =
+                        list[2 * newIndex + 1].also {
+                            list[2 * newIndex + 1] = list[newIndex]
+                        }
+                    newIndex = 2 * newIndex + 1
+                }
+
+                // Have 2 child and {smaller than/ equal to} minof them or have left child and {smaller than/ equal to} it
+                else -> return list
+            }
+        }
+        // Do not have child and done
+        return list
+    }
+}
