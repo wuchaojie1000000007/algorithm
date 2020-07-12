@@ -25,6 +25,11 @@ fun main() {
         time5 += measureTime { interpolationSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
         time6 += measureTime { exponentialSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
     }
+    //linearSearch: 74416
+    //binarySearch: 134
+    //jumpSearch: 495
+    //interpolationSearch: 58
+    //exponentialSearch: 104
     println("linearSearch: ${time2/size}")
     println("binarySearch: ${time3/size}")
     println("jumpSearch: ${time4/size}")
