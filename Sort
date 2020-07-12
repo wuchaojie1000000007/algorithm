@@ -1,10 +1,9 @@
 import kotlin.system.measureNanoTime
 
 fun main() {
-    val size = 10000
+    val size = 90000
 
-
-    val array = IntArray(size) {size-it }
+    val array = IntArray(size) { size - it }
     val time1 = measureNanoTime {
         selectionSort(array)
     } / size
@@ -12,8 +11,7 @@ fun main() {
     println("selectionSort: $time1")
 
 
-
-    val array2 = IntArray(size) {size-it }
+    val array2 = IntArray(size) { size - it }
     val time2 = measureNanoTime {
         bubbleSort(array2)
     } / size
@@ -21,16 +19,19 @@ fun main() {
     println("bubbleSort: $time2")
 
 
-
-    val array3 = IntArray(size) {size-it}
+    val array3 = IntArray(size) { size - it }
     val time3 = measureNanoTime {
         binaryInsertionSort(array3)
     } / size
 
     println("binaryInsertionSort: $time3")
 
+    val array4 = IntArray(size) { size - it }
+    val time4 = measureNanoTime {
+        mergeSort(array4)
+    } / size
 
-
+    println("mergeSort: $time4")
 
     /*println("selectionSort: $time1")
     println("bubbleSort: $time2")
@@ -47,6 +48,7 @@ fun selectionSort(array: IntArray): IntArray {
 
         var min_index = i
 
+        // Select smallest element in right side.
         for (j in i + 1..n - 1) {
             if (array[j] < array[min_index])
                 min_index = j
@@ -62,12 +64,15 @@ fun bubbleSort(array: IntArray): IntArray {
 
     val n = array.size
 
-    repeat(n) {
+    // Max iteration is n-1.
+    repeat(n - 1) {
 
         var swaped = false
 
+        // After i iteration, right i element are sorted and won't change.
         for (j in 0..n - it - 2) {
 
+            // Bigger than right, then swap with right element.
             if (array[j] > array[j + 1]) {
                 array[j] = array[j + 1].also {
                     array[j + 1] = array[j]
@@ -77,6 +82,7 @@ fun bubbleSort(array: IntArray): IntArray {
 
         }
 
+        // Return until no swap happen, means array are sorted.
         if (!swaped)
             return array
     }
@@ -85,24 +91,27 @@ fun bubbleSort(array: IntArray): IntArray {
 }
 
 fun binaryInsertionSort(array: IntArray): IntArray {
-    val n = array.size
-    fun binarySearch(array: IntArray, value: Int, start: Int, end: Int): Int {
 
+    val n = array.size
+
+    fun binarySearch(array: IntArray, value: Int, start: Int, end: Int): Int {
         var s = start
         var e = end
+
+        // Find where value should go and array still sorted.
         when {
             s == e -> {
                 if (array[s] > value) return s
                 else return s + 1
             }
+
             else -> {
                 while (s <= e) {
-                    //println("s: $s, e: $e")
                     val mid = s + (e - s) / 2
                     when {
                         array[mid] < value -> s = mid + 1
                         array[mid] > value -> e = mid - 1
-                        else -> return mid+1
+                        else -> return mid + 1
                     }
                     if (s > e) return s
                 }
@@ -110,16 +119,86 @@ fun binaryInsertionSort(array: IntArray): IntArray {
         }
         return -1
     }
-    for (i in 1..n - 1) {
+
+    for (i in 1 until n) {
 
         val value = array[i]
         val j = binarySearch(array, value, 0, i - 1)
+
+        // Swap i to j.
         var k = i
         while (j < k) {
             array[k] = array[k - 1]
             k -= 1
         }
         array[j] = value
+
     }
+
     return array
 }
+
+// Don't return array, otherwise stackoverflow.
+fun mergeSort(array: IntArray) {
+    if (array.size > 1) {
+
+        val mid = array.size / 2
+
+        val left = array.copyOfRange(0, mid)
+        val right = array.copyOfRange(mid, array.size)
+
+        mergeSort(left)
+        mergeSort(right)
+
+        var i = 0
+        var j = 0
+        var k = 0
+
+        // Merge left and right array.
+        while (i < left.size && j < right.size) {
+            when {
+                left[i] < right[j] -> {
+                    array[k] = left[i]
+                    i += 1
+                    k += 1
+                }
+                else -> {
+                    array[k] = right[j]
+                    j += 1
+                    k += 1
+                }
+            }
+        }
+        while (i < left.size) {
+            array[k] = left[i]
+            i += 1
+            k += 1
+        }
+        while (j < right.size) {
+            array[k] = right[j]
+            j += 1
+            k += 1
+        }
+    }
+}
+
+fun heapSort(array: IntArray) {
+    fun heapify(array: IntArray, n: Int, i: Int) {
+        var largest = i
+        val l = 2 * i + 1
+        val r = 2 * i + 2
+
+        if (l < n && array[l] > array[i])
+            largest = l
+        if (r < n && array[r] > array[largest])
+            largest = r
+
+        // Child is bigger.
+        if (largest != i){
+            array[i] = array[largest].also { array[largest] = array[i] }
+            heapify(array, n, largest)
+        }
+    }
+    
+}
+
