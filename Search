@@ -1,1 +1,138 @@
+import kotlin.math.sqrt
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+/**
+ * Linear Search.
+ * Binary Search.
+ * Jump Search.
+ * Intorpolation Search.
+ * Exponential Search.*/
+@ExperimentalTime
+fun main() {
+    val size = 400000
+    val array = IntArray(size) { it*2 }
+    var time2 = 0L
+    var time3 = 0
+    var time4 = 0
+    var time5 = 0
+    var time6 = 0
+    repeat(size) {
+        time2 += measureTime { linearSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
+        time3 += measureTime { binarySearch(array, 0, size - 1, it) }.toInt(DurationUnit.NANOSECONDS)
+        time4 += measureTime { jumpSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
+        time5 += measureTime { interpolationSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
+        time6 += measureTime { exponentialSearch(array, size, it) }.toInt(DurationUnit.NANOSECONDS)
+    }
+    println("linearSearch: ${time2/size}")
+    println("binarySearch: ${time3/size}")
+    println("jumpSearch: ${time4/size}")
+    println("interpolationSearch: ${time5/size}")
+    println("exponentialSearch: ${time6/size}")
+}
+
+// Time complexity O(n).
+fun linearSearch(array: IntArray, n: Int, x: Int): Int {
+
+    // Check each element.
+    for (i in 0..n - 1) {
+        if (array[i] == x)
+            return i
+    }
+    return -1
+}
+
+// Time complexity O(log(n)). Space complexity O(1).
+fun binarySearch(array: IntArray, left: Int, right: Int, x: Int): Int {
+
+    var l = left
+    var r = right
+
+    while (l <= r) {
+
+        val mid = l + (r - l) / 2
+
+        when {
+
+            // Check if x is present at mid.
+            array[mid] == x -> return mid
+
+            // If x is greater, ignore left half.
+            array[mid] < x -> l = mid + 1
+
+            // If x is smaller, ignore right half.
+            array[mid] > x -> r = mid - 1
+
+        }
+    }
+
+    // element is not in array.
+    return -1
+}
+
+
+fun jumpSearch(array: IntArray, n: Int, x: Int): Int {
+
+    // Finding block size to be jumped.
+    var step = sqrt(n.toDouble()).toInt()
+
+    var prev = 0
+
+    // Finding the block where element is present.
+    while (array[minOf(step, n) - 1] < x) {
+        prev = step
+        step += sqrt(n.toDouble()).toInt()
+        if (prev >= n)
+            return -1
+    }
+
+    // Scan the block.
+    for (i in prev..minOf(step, n) - 1) {
+        if (array[i] == x)
+            return i
+    }
+
+    // element is not in array.
+    return -1
+}
+
+// Time complexity O(log log n) If elements are uniformly distributed. Space complexity O(1)
+fun interpolationSearch(array: IntArray, n: Int, x: Int): Int {
+
+    var l = 0
+    var r = n - 1
+
+    while (l <= r) {
+
+        // New position to check.
+        val pos = l + ((r - l).toDouble() / maxOf(array[r] - array[l], 1) * (x - array[l])).toInt()
+
+        when {
+
+            // Check if x is present at mid.
+            array[pos] == x -> return pos
+
+            // If x is greater, ignore left half.
+            array[pos] < x -> l = pos + 1
+
+            // If x is smaller, ignore right half.
+            array[pos] > x -> r = pos - 1
+
+        }
+    }
+
+    // element is not in array.
+    return -1
+}
+
+// Time complexity O(log(n)). Space complexity O(1)
+fun exponentialSearch(array: IntArray, n: Int, x: Int): Int {
+
+    var i = 1
+
+    while (i < n && array[i] <= x)
+        i *= 2
+
+    return binarySearch(array, i / 2, minOf(i, n), x)
+}
