@@ -1,0 +1,125 @@
+import kotlin.system.measureNanoTime
+
+fun main() {
+    val size = 10000
+
+
+    val array = IntArray(size) {size-it }
+    val time1 = measureNanoTime {
+        selectionSort(array)
+    } / size
+
+    println("selectionSort: $time1")
+
+
+
+    val array2 = IntArray(size) {size-it }
+    val time2 = measureNanoTime {
+        bubbleSort(array2)
+    } / size
+
+    println("bubbleSort: $time2")
+
+
+
+    val array3 = IntArray(size) {size-it}
+    val time3 = measureNanoTime {
+        binaryInsertionSort(array3)
+    } / size
+
+    println("binaryInsertionSort: $time3")
+
+
+
+
+    /*println("selectionSort: $time1")
+    println("bubbleSort: $time2")
+    println("binaryInsertionSort: $time3")*/
+
+}
+
+fun selectionSort(array: IntArray): IntArray {
+
+    val n = array.size
+
+    // 0..i: sorted.   j..n-1: unsorted.
+    for (i in 0..n - 2) {
+
+        var min_index = i
+
+        for (j in i + 1..n - 1) {
+            if (array[j] < array[min_index])
+                min_index = j
+        }
+
+        array[i] = array[min_index].also { array[min_index] = array[i] }
+    }
+
+    return array
+}
+
+fun bubbleSort(array: IntArray): IntArray {
+
+    val n = array.size
+
+    repeat(n) {
+
+        var swaped = false
+
+        for (j in 0..n - it - 2) {
+
+            if (array[j] > array[j + 1]) {
+                array[j] = array[j + 1].also {
+                    array[j + 1] = array[j]
+                    swaped = true
+                }
+            }
+
+        }
+
+        if (!swaped)
+            return array
+    }
+
+    return array
+}
+
+fun binaryInsertionSort(array: IntArray): IntArray {
+    val n = array.size
+    fun binarySearch(array: IntArray, value: Int, start: Int, end: Int): Int {
+
+        var s = start
+        var e = end
+        when {
+            s == e -> {
+                if (array[s] > value) return s
+                else return s + 1
+            }
+            else -> {
+                while (s <= e) {
+                    //println("s: $s, e: $e")
+                    val mid = s + (e - s) / 2
+                    when {
+                        array[mid] < value -> s = mid + 1
+                        array[mid] > value -> e = mid - 1
+                        else -> return mid+1
+                    }
+                    if (s > e) return s
+                }
+            }
+        }
+        return -1
+    }
+    for (i in 1..n - 1) {
+
+        val value = array[i]
+        val j = binarySearch(array, value, 0, i - 1)
+        var k = i
+        while (j < k) {
+            array[k] = array[k - 1]
+            k -= 1
+        }
+        array[j] = value
+    }
+    return array
+}
