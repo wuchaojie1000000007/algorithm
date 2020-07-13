@@ -1,9 +1,23 @@
 import kotlin.system.measureNanoTime
 
+/* Unit: us / element. Total size: 10000
+selectionSort: 3796
+bubbleSort: 11882
+binaryInsertionSort: 1909
+mergeSort: 1549
+heapSort: 451
+quickSort: 287
+countSort: 1121
+radixSort: 1894
+bucketSort: 1076
+shellSort: 570
+combSort: 593
+pigeonHoleSort: 136
+cycleSort: 17144*/
 fun main() {
-    val size = 90000
+    val size = 10000
 
-    val array = IntArray(size) { size - it }
+    val array = IntArray(size) { (0..size - 1).random() }
     val time1 = measureNanoTime {
         selectionSort(array)
     } / size
@@ -11,7 +25,7 @@ fun main() {
     println("selectionSort: $time1")
 
 
-    val array2 = IntArray(size) { size - it }
+    val array2 = IntArray(size) { (0..size - 1).random() }
     val time2 = measureNanoTime {
         bubbleSort(array2)
     } / size
@@ -19,23 +33,93 @@ fun main() {
     println("bubbleSort: $time2")
 
 
-    val array3 = IntArray(size) { size - it }
+    val array3 = IntArray(size) { (0..size - 1).random() }
     val time3 = measureNanoTime {
         binaryInsertionSort(array3)
     } / size
 
     println("binaryInsertionSort: $time3")
 
-    val array4 = IntArray(size) { size - it }
+
+    val array4 = IntArray(size) { (0..size - 1).random() }
     val time4 = measureNanoTime {
         mergeSort(array4)
     } / size
 
     println("mergeSort: $time4")
 
-    /*println("selectionSort: $time1")
-    println("bubbleSort: $time2")
-    println("binaryInsertionSort: $time3")*/
+
+    val array5 = IntArray(size) { (0..size - 1).random() }
+    val time5 = measureNanoTime {
+        heapSort(array5)
+    } / size
+
+    println("heapSort: $time5")
+
+
+    val array6 = IntArray(size) { (0..size - 1).random() }
+    val time6 = measureNanoTime {
+        quickSort(array6, 0, size - 1)
+    } / size
+
+    println("quickSort: $time6")
+
+
+    var array7 = IntArray(size) { (0..size - 1).random() }
+    val time7 = measureNanoTime {
+        array7 = countSort(array7)
+    } / size
+
+    println("countSort: $time7")
+
+
+    var array8 = IntArray(size) { (0..size - 1).random() }
+    val time8 = measureNanoTime {
+        array8 = radixSort(array8)
+    } / size
+
+    println("radixSort: $time8")
+
+
+    val array9 = DoubleArray(size) { (0..size - 1).random().toDouble() / size }
+    val time9 = measureNanoTime {
+        bucketSort(array9)
+    } / size
+
+    println("bucketSort: $time9")
+
+
+    val array10 = IntArray(size) { (0..size - 1).random() }
+    val time10 = measureNanoTime {
+        shellSort(array10)
+    } / size
+
+    println("shellSort: $time10")
+
+
+    val array11 = IntArray(size) { (0..size - 1).random() }
+    val time11 = measureNanoTime {
+        combSort(array11)
+    } / size
+
+    println("combSort: $time11")
+
+
+    val array12 = IntArray(size) { (0..size - 1).random() }
+    val time12 = measureNanoTime {
+        pigeonHoleSort(array12)
+    } / size
+
+    println("pigeonHoleSort: $time12")
+
+
+    val array13 = IntArray(size) { (0..size - 1).random() }
+    val time13 = measureNanoTime {
+        cycleSort(array13)
+    } / size
+
+    println("cycleSort: $time13")
+
 
 }
 
@@ -194,11 +278,294 @@ fun heapSort(array: IntArray) {
             largest = r
 
         // Child is bigger.
-        if (largest != i){
+        if (largest != i) {
             array[i] = array[largest].also { array[largest] = array[i] }
             heapify(array, n, largest)
         }
     }
-    
+
+    // Max heap
+    val n = array.size
+    for (i in n / 2 downTo 0) {
+        heapify(array, n, i)
+    }
+
+    // Extract element
+    for (i in n - 1 downTo 1) {
+        array[0] = array[i].also { array[i] = array[0] }
+        heapify(array, i, 0)
+    }
+
 }
 
+fun quickSort(array: IntArray, low: Int, high: Int) {
+
+    fun patition(array: IntArray, low: Int, high: Int): Int {
+
+        // Choose high as pivot.
+        val pivot = array[high]
+
+        // Smaller number should go to i.
+        var i = low
+
+        for (j in low..high - 1) {
+            when {
+                array[j] < pivot -> {
+                    array[j] = array[i].also { array[i] = array[j] }
+                    i += 1
+                }
+            }
+        }
+
+        array[i] = array[high].also { array[high] = array[i] }
+
+        return i
+    }
+
+    if (low < high) {
+
+        // Pivot is at pi.
+        val pi = patition(array, low, high)
+
+        quickSort(array, low, pi - 1)
+        quickSort(array, pi + 1, high)
+    }
+
+}
+
+// For Integer in some range.
+fun countSort(array: IntArray): IntArray {
+
+    val min = array.min()!!
+    val max = array.max()!!
+
+    val count = IntArray(max - min + 1) { 0 }
+    val output = IntArray(array.size)
+
+    array.forEach { count[it - min] += 1 }
+
+    for (i in 1..max - min) {
+        count[i] += count[i - 1]
+    }
+
+    array.forEach {
+        count[it - min] -= 1
+        output[count[it - min]] = it
+    }
+
+    return output
+}
+
+// For integer.
+fun radixSort(array: IntArray): IntArray {
+    fun countSort(array: IntArray, exp: Int): IntArray {
+
+        val output = IntArray(array.size)
+        val count = IntArray(10) { 0 }
+
+        array.forEach {
+            val index = (it / exp) % 10
+            count[index] += 1
+        }
+
+        for (i in 1..9) {
+            count[i] += count[i - 1]
+        }
+
+        array.reversed().forEach {
+            val index = (it / exp) % 10
+            count[index] -= 1
+            output[count[index]] = it
+        }
+
+        return output
+    }
+
+    var arr = array
+    val max = array.max()
+
+    var exp = 1
+    while (max!! / (exp) > 0) {
+        arr = countSort(arr, exp)
+        exp *= 10
+    }
+
+    return arr
+}
+
+fun bucketSort(array: DoubleArray) {
+
+    fun binaryInsertionSort(array: DoubleArray): DoubleArray {
+
+        val n = array.size
+
+        fun binarySearch(array: DoubleArray, value: Double, start: Int, end: Int): Int {
+            var s = start
+            var e = end
+
+            // Find where value should go and array still sorted.
+            when {
+                s == e -> {
+                    if (array[s] > value) return s
+                    else return s + 1
+                }
+
+                else -> {
+                    while (s <= e) {
+                        val mid = s + (e - s) / 2
+                        when {
+                            array[mid] < value -> s = mid + 1
+                            array[mid] > value -> e = mid - 1
+                            else -> return mid + 1
+                        }
+                        if (s > e) return s
+                    }
+                }
+            }
+            return -1
+        }
+
+        for (i in 1 until n) {
+
+            val value = array[i]
+            val j = binarySearch(array, value, 0, i - 1)
+
+            // Swap i to j.
+            var k = i
+            while (j < k) {
+                array[k] = array[k - 1]
+                k -= 1
+            }
+            array[j] = value
+
+        }
+
+        return array
+    }
+
+    val slot_num = array.size / 100
+    val arr = Array(maxOf(slot_num, 1)) { arrayListOf<Double>() }
+
+    array.forEach {
+        val index = (it * slot_num).toInt()
+        arr[index].plusAssign(it)
+    }
+
+    var k = 0
+    (0..slot_num - 1).forEach { i ->
+        (arr[i].forEach {
+            array[k] = it
+            k += 1
+        })
+    }
+
+    binaryInsertionSort(array)
+}
+
+// Like insertion sort.
+fun shellSort(array: IntArray) {
+
+    var gap = array.size / 2
+
+    while (gap > 0) {
+
+        for (i in gap..array.size - 1) {
+
+            val temp = array[i]
+            var j = i
+
+            while (j >= gap && array[j - gap] > temp) {
+                array[j] = array[j - gap]
+                j -= gap
+            }
+            array[j] = temp
+        }
+        gap /= 2
+    }
+}
+
+fun combSort(array: IntArray) {
+
+    fun getNextGap(gap: Int) = if (gap / 1.3 < 1) 1 else (gap / 1.3).toInt()
+
+    var gap = array.size
+
+    var swap = true
+
+    while (gap != 1 || swap == true) {
+        gap = getNextGap(gap)
+        swap = false
+        for (i in 0..array.size - gap - 1) {
+            if (array[i] > array[i + gap]) {
+                array[i] = array[i + gap].also { array[i + gap] = array[i] }
+                swap = true
+            }
+        }
+    }
+}
+
+fun pigeonHoleSort(array: IntArray) {
+
+    val min = array.min()!!
+    val max = array.max()!!
+
+    val holes = IntArray(max - min + 1)
+
+    array.forEach { holes[it - min] += 1 }
+
+    var i = 0
+
+    for (ind in 0..max - min) {
+        while (holes[ind] > 0) {
+            holes[ind] -= 1
+            array[i] = min + ind
+            i += 1
+        }
+    }
+}
+
+fun cycleSort(array: IntArray) {
+
+    var write = 0
+
+    for (cycleStart in 0..array.size - 2) {
+        var item = array[cycleStart]
+        var pos = cycleStart
+
+        for (i in cycleStart + 1..array.size - 1) {
+            if (array[i] < item) {
+                pos += 1
+            }
+        }
+
+        // item is smallest among right side.
+        if (pos == cycleStart)
+            continue
+
+        // Handle duplicate element.
+        while (array[pos] == item)
+            pos += 1
+
+        array[pos] = item.also { item = array[pos] }
+        write += 1
+
+        // Keep switch untill cycleStart position less than right element.
+        while (pos != cycleStart) {
+
+            pos = cycleStart
+
+            for (i in cycleStart + 1..array.size - 1) {
+                if (array[i] < item) {
+                    pos += 1
+                }
+            }
+
+            // Handle duplicate element.
+            while (array[pos] == item)
+                pos += 1
+
+            array[pos] = item.also { item = array[pos] }
+            write += 1
+        }
+    }
+}
