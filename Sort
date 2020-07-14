@@ -13,7 +13,8 @@ bucketSort: 1076
 shellSort: 570
 combSort: 593
 pigeonHoleSort: 136
-cycleSort: 17144*/
+cycleSort: 17144
+qiuckSortIterative: 701*/
 fun main() {
     val size = 10000
 
@@ -120,6 +121,13 @@ fun main() {
 
     println("cycleSort: $time13")
 
+
+    val array14 = IntArray(size) { (0..size - 1).random() }
+    val time14 = measureNanoTime {
+        qiuckSortIterative(array14, 0, size - 1)
+    } / size
+
+    println("qiuckSortIterative: $time14")
 
 }
 
@@ -566,6 +574,162 @@ fun cycleSort(array: IntArray) {
 
             array[pos] = item.also { item = array[pos] }
             write += 1
+        }
+    }
+}
+
+fun qiuckSortIterative(array: IntArray, low: Int, high: Int) {
+
+    fun patition(array: IntArray, left: Int, right: Int): Int {
+
+        // Choose ramdon pivot.
+        val pivotIndex = (left..right).random()
+        array[right] = array[pivotIndex].also { array[pivotIndex] = array[right] }
+        val pivot = array[right]
+
+        // Smaller number should go to i.
+        var i = left
+
+        for (j in left..right - 1) {
+            if (array[j] < pivot) {
+                array[j] = array[i].also { array[i] = array[j] }
+                i += 1
+            }
+        }
+
+        array[i] = array[right].also { array[right] = array[i] }
+
+        return i
+    }
+
+    fun insertionSort(array: IntArray, low: Int, high: Int) {
+        for (i in low + 1..high) {
+            var j = i
+            while (j > low && array[j] < array[j - 1]) {
+                array[j] = array[j - 1].also {
+                    array[j - 1] = array[j]
+                    j -= 1
+                }
+            }
+        }
+    }
+
+    val stack = IntArray(high - low + 1)
+
+    var top = -1
+
+    top += 1
+    stack[top] = low
+    top += 1
+    stack[top] = high
+
+    while (top >= 0) {
+
+        val h = stack[top]
+        top -= 1
+        val l = stack[top]
+        top -= 1
+
+        val pivot = patition(array, l, h)
+
+        // Both left and right can be big(>=7), small(<7), or zero. Total 9 cases.
+        when {
+            // Left is big.
+            pivot - l >= 7 -> when {
+
+                // Right is big.
+                h - pivot >= 7 -> {
+
+                    // Push the bigger one first to reduce stack size.
+                    if (pivot - l >= h - pivot) {
+                        top += 1
+                        stack[top] = l
+                        top += 1
+                        stack[top] = pivot - 1
+                        top += 1
+                        stack[top] = pivot + 1
+                        top += 1
+                        stack[top] = h
+
+                    } else {
+                        top += 1
+                        stack[top] = pivot + 1
+                        top += 1
+                        stack[top] = h
+                        top += 1
+                        stack[top] = l
+                        top += 1
+                        stack[top] = pivot - 1
+
+                    }
+                }
+
+                // Right is small, use insert sort, push left.
+                pivot + 1 < h -> {
+                    top += 1
+                    stack[top] = l
+                    top += 1
+                    stack[top] = pivot - 1
+
+                    insertionSort(array, pivot + 1, h)
+
+                }
+
+                // No right, push left.
+                else -> {
+                    top += 1
+                    stack[top] = l
+                    top += 1
+                    stack[top] = pivot - 1
+                }
+            }
+
+            // Left is small.
+            pivot - 1 > l -> when {
+
+                // Push right, insert sort left.
+                h - pivot >= 7 -> {
+                    top += 1
+                    stack[top] = pivot + 1
+                    top += 1
+                    stack[top] = h
+
+                    insertionSort(array, l, pivot - 1)
+                }
+
+                // Right is small, insert sort left.
+                pivot + 1 < h -> {
+                    insertionSort(array, l, pivot - 1)
+                    insertionSort(array, pivot + 1, h)
+                }
+
+                // No right, insert sort left.
+                else -> {
+                    insertionSort(array, l, pivot - 1)
+                }
+            }
+
+            // No left
+            else -> when {
+
+                // Right is big,
+                h - pivot >= 7 -> {
+                    top += 1
+                    stack[top] = pivot + 1
+                    top += 1
+                    stack[top] = h
+
+                }
+
+                // Right is small.
+                pivot + 1 < h -> {
+                    insertionSort(array, pivot + 1, h)
+                }
+
+                // No right.
+                else -> {
+                }
+            }
         }
     }
 }
