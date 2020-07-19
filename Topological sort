@@ -1,0 +1,58 @@
+// For directed graph, topological sort.
+class Graph(val vertices: Int) {
+
+    private val adjacentList = List(vertices) { mutableListOf<Int>() }
+
+    fun addEdge(u: Int, v: Int) {
+        adjacentList[u] += v
+    }
+
+    // If has topological sorted list, return it, else return null.
+    fun topologicalSort(): List<Int>? {
+
+        // Indegree for each vertices.
+        val indegree = MutableList(vertices) { 0 }
+
+        // Fill up indegree.
+        adjacentList.forEach {
+            it.forEach {
+                indegree[it] += 1
+            }
+        }
+
+        // Store result.
+        val topologicalList = mutableListOf<Int>()
+
+        // Indegree is 0.
+        val queue = mutableListOf<Int>()
+
+        // How many vertices are removed.
+        var count = 0
+
+        // Init queue.
+        for (i in 0 until vertices) {
+            if (indegree[i] == 0)
+                queue += i
+        }
+
+        // There are vertices can be remove.
+        while (queue.isNotEmpty()) {
+
+            // Remove the first one, also can remove any one.
+            val u = queue.removeAt(0)
+            topologicalList += u
+            count += 1
+
+            // The indegree of neighbor minus one.
+            adjacentList[u].forEach {
+                indegree[it] -= 1
+
+                // If indegree become zero, put it in queue.
+                if (indegree[it] == 0)
+                    queue += it
+            }
+        }
+
+        return if (count == vertices) topologicalList else null
+    }
+}
