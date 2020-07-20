@@ -1,0 +1,156 @@
+class CircularQueue<E> {
+    private val minCapacity = 4
+
+    var elements: Array<Any?>
+    var capacity = 0
+    var font = -1
+    var rear = -1
+
+    constructor() {
+        this.elements = arrayOfNulls(4)
+        this.capacity = 4
+    }
+
+    constructor(initialCapacity: Int) {
+        this.elements = arrayOfNulls(maxOf(initialCapacity, 4))
+        this.capacity = maxOf(initialCapacity, 4)
+    }
+
+    fun enqueue(element: E) {
+        when {
+            this.isEmpty() -> {
+                font = 0
+                rear = 0
+                elements[0] = element
+            }
+            this.gonaFull() -> {
+                val size = nowSize()
+                capacity *= 2
+                val newArray = arrayOfNulls<Any>(capacity)
+                if (rear > font) {
+                    System.arraycopy(elements, font, newArray, 0, size)
+                } else {
+                    System.arraycopy(elements, font, newArray, 0, elements.size - font)
+                    System.arraycopy(elements, 0, newArray, elements.size - font, rear + 1)
+                }
+                newArray[size] = element
+                font = 0
+                rear = size
+                elements = newArray
+            }
+            else -> {
+                rear = (rear + 1) % elements.size
+                elements[rear] = element
+                if (font == -1) font = rear
+            }
+        }
+    }
+
+    fun dequeue(): E {
+        if (font == -1) throw CircularQueueUnderFlowException()
+        val oldValue = elements[font]
+        elements[font] = null
+        when {
+            font == rear -> {
+                font = -1
+                rear = -1
+            }
+            this.gonaEmpty() -> {
+                val size = nowSize()
+                capacity /= 2
+                val newArray = arrayOfNulls<Any>(capacity)
+                if (rear < font) {
+                    System.arraycopy(elements, font + 1, newArray, 0, capacity * 2 - font - 1)
+                    System.arraycopy(elements, 0, newArray, capacity * 2 - font, rear + 1)
+                } else {
+                    System.arraycopy(elements, font + 1, newArray, 0, rear - font)
+                }
+                font = 0
+                rear = size - 2
+                elements = newArray
+            }
+            else -> {
+                font = (font + 1) % elements.size
+            }
+        }
+        return oldValue as E
+    }
+
+    fun front() = try {
+        elements[font] as E
+    } catch (e: IndexOutOfBoundsException) {
+        throw CircularQueueUnderFlowException()
+    }
+
+    fun rear() = try {
+        elements[rear] as E
+    } catch (e: IndexOutOfBoundsException) {
+        throw CircularQueueUnderFlowException()
+    }
+
+    fun nowSize() = when {
+        rear > font -> rear - font + 1
+        rear < font -> capacity - font + rear + 1
+        else -> 1
+    }
+
+    fun isEmpty() = font == -1
+
+    fun isFull() = (rear + 1) % capacity == font
+
+    fun gonaFull() = nowSize() > (capacity * 0.8).toInt()
+
+    fun gonaEmpty() = nowSize() < (capacity * 0.4).toInt() && nowSize() > 4
+
+    override fun toString(): String {
+        val s = StringBuilder()
+        s.append("[")
+        when {
+            rear < font -> {
+                (font..capacity - 1).forEach { s.append("${elements[it]}, ") }
+                (0..rear).forEach { s.append("${elements[it]}, ") }
+            }
+            else -> {
+                (font..rear).forEach { s.append("${elements[it]}, ") }
+            }
+        }
+        s.delete(s.length - 2, s.length)
+        s.append("]")
+        return s.toString()
+    }
+}
+
+class CircularQueueUnderFlowException : RuntimeException()
+
+fun main() {
+
+    val cirQue = CircularQueue<Int>(1)
+    fun details(c: CircularQueue<Int>) {
+        c.elements.forEach { print("$it ") }
+        println()
+        println("font: ${c.font}, rear: ${c.rear}, size:${cirQue.elements.size} cap:${c.capacity} queue:$c")
+    }
+
+    cirQue.enqueue(4)
+    details(cirQue)
+    cirQue.enqueue(1)
+    details(cirQue)
+    cirQue.enqueue(2)
+    details(cirQue)
+    cirQue.enqueue(3)
+    details(cirQue)
+    cirQue.dequeue()
+    details(cirQue)
+    (5..20).forEach {
+        cirQue.enqueue(it)
+        details(cirQue)
+    }
+    repeat(3) {
+        cirQue.dequeue()
+        details(cirQue)
+    }
+    repeat(15) {
+        cirQue.dequeue()
+        details(cirQue)
+    }
+}
