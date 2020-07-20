@@ -1,0 +1,68 @@
+class FixedDeque<E>(private val capacity: Int) {
+
+    private val elements: Array<Any?>
+    private var size = 0
+
+    init {
+        this.elements = arrayOfNulls(capacity)
+    }
+
+    fun enqueueFront(element: E) {
+        if (size == capacity) throw DequeOverFlowException()
+        System.arraycopy(elements, 0, elements, 1, size++)
+        elements[0] = element
+    }
+
+    fun enqueueRear(element: E) {
+        if (size == capacity) throw DequeOverFlowException()
+        elements[size++] = element
+    }
+
+    fun dequeueFront(): E {
+        if (size == 0) throw DequeUnderFlowException()
+        val oldValue = elements[0]
+        System.arraycopy(elements, 1, elements, 0, --size)
+        return oldValue as E
+    }
+
+    fun dequeueRear(): E {
+        if (size == 0) throw DequeUnderFlowException()
+        val oldValue = elements[--size]
+        return oldValue as E
+    }
+
+    fun font(): E {
+        try {
+            return elements[0] as E
+        } catch (e: IndexOutOfBoundsException) {
+            throw DequeUnderFlowException()
+        }
+    }
+
+    fun rear(): E {
+        try {
+            return elements[size - 1] as E
+        } catch (e: IndexOutOfBoundsException) {
+            throw DequeUnderFlowException()
+        }
+    }
+
+    fun isEmpty() = size == 0
+
+    override fun toString(): String {
+        if (size == 0) return "[]"
+        val length = size - 1
+        val builder = StringBuilder(size * 16)
+        builder.append('[')
+        for (i in 0 until length) {
+            builder.append(elements[i])
+            builder.append(", ")
+        }
+        builder.append(elements[length])
+        builder.append(']')
+        return builder.toString()
+    }
+}
+
+class DequeOverFlowException : RuntimeException()
+class DequeUnderFlowException : RuntimeException()
