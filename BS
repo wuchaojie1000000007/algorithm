@@ -1,0 +1,31 @@
+// Find first index such that array[index] >= x.
+fun bs(array: IntArray, x: Int): Int {
+    if (x > array.last()) return -1
+    var l = 0
+    var r = array.size
+    while (r > l) {
+        println("left: $l, right: $r")
+        val mid = l + (r - l) / 2
+        when {
+            array[mid] < x -> l = mid + 1
+            array[mid] == x -> r -= 1
+            array[mid] > x -> r = mid
+        }
+    }
+    return l
+}
+
+// Find last index such that array[index] < x.
+fun bis(array: IntArray, x: Int): Int {
+    var l = 0
+    var r = array.size
+    while (r > l) {
+        val mid = l + (r - l) / 2
+        when {
+            array[mid] < x -> l = mid + 1
+            array[mid] == x -> r -= 1
+            array[mid] > x -> r = mid
+        }
+    }
+    return l-1
+}
