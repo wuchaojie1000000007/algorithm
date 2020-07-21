@@ -4,7 +4,6 @@ fun bs(array: IntArray, x: Int): Int {
     var l = 0
     var r = array.size
     while (r > l) {
-        println("left: $l, right: $r")
         val mid = l + (r - l) / 2
         when {
             array[mid] < x -> l = mid + 1
