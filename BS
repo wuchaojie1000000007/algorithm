@@ -1,3 +1,20 @@
+// Find first index such that array[index] > x.
+fun bns(array: IntArray, x: Int): Int {
+    var l = 0
+    var r = array.size
+    while (r > l) {
+        println("$l   $r")
+        val mid = l + (r - l) / 2
+        println(mid)
+        when {
+            array[mid] < x -> l = mid + 1
+            array[mid] == x -> l += 1
+            array[mid] > x -> r = mid
+        }
+    }
+    return l
+}
+
 // Find first index such that array[index] >= x.
 fun bs(array: IntArray, x: Int): Int {
     if (x > array.last()) return -1
