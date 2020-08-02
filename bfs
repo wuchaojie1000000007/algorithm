@@ -2,7 +2,7 @@
 fun main() {
     val r = System.`in`.bufferedReader()
     repeat(r.readLine()!!.toInt()) {
-        
+
         val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
 
         // Create adjacent List
@@ -10,12 +10,14 @@ fun main() {
         repeat(edges) {
             val (u, v) = r.readLine()!!.split(" ").map { it.toInt() }
             adj[u - 1] += v - 1
-            // For undirected graph
-            // adj[v - 1] += u - 1
+
         }
-        
+
         // Store visited vertices
         val visited = BooleanArray(vertices) { false }
+
+        // Store parent of vertices
+        val parent = IntArray(vertices) { -1 }
 
         fun bfs(source: Int, des: Int): Boolean {
 
@@ -28,9 +30,19 @@ fun main() {
             while (stack.isNotEmpty()) {
                 val v = stack.removeAt(0)
                 for (neighbor in adj[v]) {
+                    parent[neighbor] = v
                     when {
 
-                        neighbor == des -> return true
+                        neighbor == des -> {
+                            val path = mutableListOf<Int>()
+                            var child = des
+                            while (child != -1){
+                                path += parent[child]
+                                child = parent[child]
+                            }
+                            path.reversed().also { println(it.joinToString(", ")) }
+                            return true
+                        }
 
                         // Only process unvisited vertices
                         !visited[neighbor] -> {
@@ -45,3 +57,4 @@ fun main() {
         }
     }
 }
+
