@@ -1,0 +1,45 @@
+// bfs for directed graph
+fun main() {
+    val r = System.`in`.bufferedReader()
+    repeat(r.readLine()!!.toInt()) {
+        
+        val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
+
+        // Create adjacent List
+        val adj = List(vertices) { mutableListOf<Int>() }
+        repeat(edges) {
+            val (u, v) = r.readLine()!!.split(" ").map { it.toInt() }
+            adj[u - 1] += v - 1
+        }
+        
+        // Store visited vertices
+        val visited = BooleanArray(vertices) { false }
+
+        fun bfs(source: Int, des: Int): Boolean {
+
+            // Store vertices need to be process
+            val stack = mutableListOf<Int>()
+            stack += source
+            visited[source] = true
+
+            // Keep process if not done yet
+            while (stack.isNotEmpty()) {
+                val v = stack.removeAt(0)
+                for (neighbor in adj[v]) {
+                    when {
+
+                        neighbor == des -> return true
+
+                        // Only process unvisited vertices
+                        !visited[neighbor] -> {
+                            stack += neighbor
+                            visited[neighbor] = true
+                        }
+                    }
+                }
+            }
+            // Process has done, and do not find a way
+            return false
+        }
+    }
+}
