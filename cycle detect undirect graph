@@ -1,0 +1,58 @@
+// detect cycle in a undirected graph
+fun main() {
+    val r = System.`in`.bufferedReader()
+    repeat(r.readLine()!!.toInt()) {
+
+        val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
+
+        // Create adjacent List
+        val adj = List(vertices) { mutableListOf<Int>() }
+        repeat(edges) {
+            val (u, v) = r.readLine()!!.split(" ").map { it.toInt() }
+            // Only one direction
+            adj[u - 1] += v - 1
+        }
+
+        // Init parent to itself
+        val parent = IntArray(vertices) { it }
+        // Init rank to 0
+        val rank = IntArray(vertices) { 0 }
+
+        // Find parent of v, also compress path
+        fun find(v: Int): Int {
+            if (parent[v] != v) parent[v] = find(parent[v])
+            return parent[v]
+        }
+
+        // Union by rank
+        fun union(u: Int, v: Int) {
+            when {
+                // Attach v to u
+                rank[v] < rank[u] -> parent[v] = u
+                // Attach u to v
+                rank[u] < rank[v] -> parent[u] = v
+                // Their rank are same, arbitrary attach, increase rank by one
+                else -> {
+                    parent[u] = v
+                    rank[v] += 1
+                }
+            }
+        }
+
+        var hasCycle = false
+        // Check if has a cycle
+        loop@for (u in 0 until vertices) {
+            val parentU = find(u)
+            for (v in adj[u]) {
+                val parentV = find(v)
+                // Find a cycle cause they should not be same
+                if (parentU == parentV) {
+                    hasCycle = true
+                    break@loop
+                }
+                union(parentU, parentV)
+            }
+        }
+        println(hasCycle)
+    }
+}
