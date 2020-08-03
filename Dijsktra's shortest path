@@ -1,0 +1,171 @@
+data class Vertices(val v: Int, var distance: Int) : Comparable<Vertices> {
+    override fun compareTo(other: Vertices) = this.distance - other.distance
+}
+
+class Heap(maxSize: Int) {
+
+    // Heap stored in a list, init all the edge with max distance
+    val h = Array(maxSize) { Vertices(it, Int.MAX_VALUE) }
+
+    // After heapify or bubble up, keep track of the index of any node
+    val indexOfNode = IntArray(maxSize) { it }
+
+    // After pop, size will decrease
+    private var size = maxSize
+
+    // Return min value
+    fun pop(): Vertices {
+
+        // Change value to keep heap work, after change should heapify
+        // Also keep track of changed vertices's index, for later compare distance
+        h[0] = h[size - 1].also { h[size - 1] = h[0] }
+        indexOfNode[h[0].v] = indexOfNode[h[size - 1].v]
+            .also { indexOfNode[h[size - 1].v] = indexOfNode[h[0].v] }
+
+        return h[--size]
+    }
+
+    // Rearrange the heap, default index is 0
+    fun heapify(index: Int = 0) {
+
+        var i = index
+
+        // While it is bigger than min of it's child
+        while ((i * 2 + 1 < size && h[i] > h[i * 2 + 1]) ||
+            (i * 2 + 2 < size && h[i] > minOf(h[i * 2 + 1], h[i * 2 + 2]))
+        ) {
+            when {
+                // Has two child
+                i * 2 + 2 < size -> {
+
+                    // Find index of min of child
+                    val child = if (h[i * 2 + 1] < h[i * 2 + 2]) i * 2 + 1 else i * 2 + 2
+
+                    // Change value and keep track of vertices's index
+                    h[i] = h[child].also { h[child] = h[i] }
+                    indexOfNode[h[i].v] = indexOfNode[h[child].v]
+                        .also { indexOfNode[h[child].v] = indexOfNode[h[i].v] }
+
+                    // Index become child's index
+                    i = child
+
+                }
+
+                // Only has one child
+                else -> {
+
+                    // Change value and keep track of vertices's index
+                    h[i] = h[i * 2 + 1].also { h[i * 2 + 1] = h[i] }
+                    indexOfNode[h[i].v] = indexOfNode[h[i * 2 + 1].v]
+                        .also { indexOfNode[h[i * 2 + 1].v] = indexOfNode[h[i].v] }
+
+                    // Index become child's index
+                    i = i * 2 + 1
+
+                }
+            }
+        }
+    }
+
+    // After change the value in the middle of heap, should bubble up
+    fun bubbleUp(index: Int) {
+
+        var i = index
+
+        // Less than it's parent, bubble up
+        while (h[i] < h[(i - 1) / 2]) {
+
+            // Change value and keep track of vertices's index
+            h[i] = h[(i - 1) / 2].also { h[(i - 1) / 2] = h[i] }
+            indexOfNode[h[i].v] = indexOfNode[h[(i - 1) / 2].v]
+                .also { indexOfNode[h[(i - 1) / 2].v] = indexOfNode[h[i].v] }
+
+            // Index become parent's index
+            i = (i - 1) / 2
+        }
+    }
+
+    // Check if every thing has pop up
+    fun isNotEmpty() = size > 0
+
+    // Check vertices v has been pop up
+    fun isInHeap(v: Int) = indexOfNode[v] < size
+}
+
+fun main() {
+
+    // This is for debug
+    val vertices = 9
+    val edges = 14
+    val adj = listOf(
+        listOf(Vertices(1, 4), Vertices(7, 8)),
+        listOf(Vertices(0, 4), Vertices(7, 11), Vertices(2, 8)),
+        listOf(Vertices(1, 8), Vertices(8, 2), Vertices(5, 4), Vertices(3, 7)),
+        listOf(Vertices(2, 7), Vertices(5, 14), Vertices(4, 9)),
+        listOf(Vertices(3, 9), Vertices(5, 10)),
+        listOf(Vertices(4, 10), Vertices(3, 14), Vertices(2, 4), Vertices(6, 2)),
+        listOf(Vertices(5, 2), Vertices(8, 6), Vertices(7, 1)),
+        listOf(Vertices(6, 1), Vertices(8, 7), Vertices(1, 11), Vertices(0, 8)),
+        listOf(Vertices(2, 2), Vertices(6, 6), Vertices(7, 7))
+    )
+
+    /*// For quick read
+    val r = System.`in`.bufferedReader()
+
+    // Read vertices num and edges num
+    val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
+
+    // Adjacent list to store edges
+    val adj = List(vertices) { mutableListOf<Vertices>() }
+
+    // Fill up adj list
+    repeat(edges) {
+        val (u, v, w) = r.readLine()!!.split(" ").map { it.toInt() }
+        adj[u] += Vertices(v, w)
+        adj[v] += Vertices(u, w)
+    }*/
+
+    // Result stored in this array, follow the parent, can print shortest path to all other vertices
+    val parent = IntArray(vertices) { -1 }
+
+    // Init heap class
+    val heap = Heap(vertices)
+
+    // Store shortest path's length
+    val distance = IntArray(vertices) { Int.MAX_VALUE }
+
+    // Change the start vertices to what you want
+    val startVertices = 1
+
+    // Set distance to start to 0, also bubble it up
+    heap.h[startVertices].distance = 0
+    heap.bubbleUp(heap.indexOfNode[startVertices])
+
+    // Loop once, heap size decrease 1, until heap is empty
+    while (heap.isNotEmpty()) {
+
+        // Get the min value, update weights
+        val (u, minDis) = heap.pop()
+        distance[u] = minDis
+
+        // After pop, heapify it
+        heap.heapify()
+
+        // Loop each neighbor, if it is in heap and distance from this vertices is lass than distance in heap
+        // then update the distance in heap, change the parent of it to u, also bubble up
+        adj[u].forEach { (v, weight) ->
+            val indexOfV = heap.indexOfNode[v]
+            if (heap.isInHeap(v) && distance[u] + weight < heap.h[indexOfV].distance) {
+                heap.h[indexOfV].distance = distance[u] + weight
+                parent[v] = u
+                heap.bubbleUp(indexOfV)
+            }
+        }
+    }
+
+    // Print the min distance and parent of vertices
+    (0 until vertices).forEach {
+        println("min distance from $it to $startVertices is ${distance[it]}")
+        println("parent of $it is ${parent[it]}")
+    }
+}
