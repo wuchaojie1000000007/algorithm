@@ -1,0 +1,68 @@
+data class Edge(val u: Int, val v: Int, val w: Int)
+
+// Find Minimum Spanning Tree of a given connected,
+// undirected and weighted graph, union find algorithm
+fun main() {
+    val r = System.`in`.bufferedReader()
+    repeat(r.readLine()!!.toInt()) {
+
+        val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
+
+        // Create edges List
+        val edge = mutableListOf<Edge>()
+        repeat(edges) {
+            val (u, v, w) = r.readLine()!!.split(" ").map { it.toInt() }
+            // Only one direction
+            edge += Edge(u, v, w)
+        }
+        // In place sort
+        edge.sortBy { it.w }
+
+        // Init parent to itself
+        val parent = IntArray(vertices) { it }
+        // Init rank to 0
+        val rank = IntArray(vertices) { 0 }
+
+        // Find parent of v, also compress path
+        fun find(v: Int): Int {
+            if (parent[v] != v) parent[v] = find(parent[v])
+            return parent[v]
+        }
+
+        // Union by rank
+        fun union(u: Int, v: Int) {
+            when {
+                // Attach v to u
+                rank[v] < rank[u] -> parent[v] = u
+                // Attach u to v
+                rank[u] < rank[v] -> parent[u] = v
+                // Their rank are same, arbitrary attach, increase rank by one
+                else -> {
+                    parent[u] = v
+                    rank[v] += 1
+                }
+            }
+        }
+
+        val MST = mutableListOf<Edge>()
+
+        // For edge list
+        var i = 0
+        // For mst list
+        var e = 0
+        // MST vertices num = node num - 1
+        while (e < vertices - 1) {
+            val (u, v, w) = edge[i++]
+            val up = parent[u]
+            val vp = parent[v]
+            // Do not form a cycle, add it to result, union them
+            if (up != vp) {
+                MST += Edge(u, v, w)
+                union(up, vp)
+                e += 1
+            }
+        }
+        
+        println(MST)
+    }
+}
