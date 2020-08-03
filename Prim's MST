@@ -1,0 +1,146 @@
+data class Node(val v: Int, var weight: Int) : Comparable<Node> {
+    override fun compareTo(other: Node) = this.weight - other.weight   
+}
+operator fun Node.div(int: Int) = Node(this.v, this.weight)
+
+
+class Heap(private val maxSize: Int) {
+    
+    // Heap stored in a list
+    val h = MutableList(maxSize) { Node(it, Int.MAX_VALUE) }
+    
+    // After heapify or bubble up, keep track of the index of any node
+    val indexOfNode = MutableList(maxSize) { it }
+    
+    // After pop, size will decrease
+    var size = maxSize
+
+    // Return min value
+    fun pop(): Node {
+        h[0] = h[size - 1].also { h[size - 1] = h[0] }
+        
+        indexOfNode[h[0].v] = indexOfNode[h[size - 1].v]
+            .also { indexOfNode[h[size - 1].v] = indexOfNode[h[0].v] }
+        
+        return h[--size]
+    }
+
+    // Rearrange the heap, default index is 0
+    fun heapify(index: Int = 0) {
+        var i = index
+        
+        // While it has left child
+        while (i * 2 + 1 < size) {
+            when {
+                
+                // Also has right child
+                i * 2 + 2 < size -> {
+                    
+                    // Find min of child
+                    val child = if (h[i * 2 + 1] < h[i * 2 + 2]) i * 2 + 1 else i * 2 + 2
+                    
+                    // If bigger than child, change their position
+                    if (h[i] > h[child]) {
+                        
+                        h[i] = h[child].also { h[child] = h[i] }
+                        
+                        indexOfNode[h[i].v] = indexOfNode[h[child].v]
+                            .also { indexOfNode[h[child].v] = indexOfNode[h[i].v] }
+                        
+                        i = child
+                    }
+                }
+                
+                // If bigger than left child, change their position
+                h[i] > h[i * 2 + 1] -> {
+                    
+                    h[i] = h[i * 2 + 1].also { h[i * 2 + 1] = h[i] }
+                    
+                    indexOfNode[h[i].v] = indexOfNode[h[i * 2 + 1].v]
+                        .also { indexOfNode[h[i * 2 + 1].v] = indexOfNode[h[i].v] }
+                    
+                    i = i * 2 + 1
+                }
+            }
+        }
+    }
+
+    // After change the value in the middle of heap, should bubble up
+    fun bubbleUp(index: Int) {
+        var i = index
+        
+        // Less than it's parent, bubble up
+        while (h[i] < h[(i - 1) / 2]) {
+            
+            h[i] = h[(i - 1) / 2].also { h[(i - 1) / 2] = h[i] }
+            
+            indexOfNode[i] = indexOfNode[(i - 1) / 2]
+                .also { indexOfNode[(i - 1) / 2] = indexOfNode[i] }
+            
+            i = (i - 1) / 2
+        }
+    }
+
+    // Check if every thing has pop up
+    fun isNotEmpty() = size > 0
+
+    // Check vertices v has been pop up
+    fun isInHeap(v: Int) = indexOfNode[v] < size
+}
+
+fun main() {
+    
+    // For quick read
+    val r = System.`in`.bufferedReader()
+    
+    // Read vertices num and edges num
+    val (vertices, edges) = r.readLine()!!.split(" ").map { it.toInt() }
+    
+    // Adjacent list to store edges
+    val adj = List(vertices) { mutableListOf<Node>() }
+    
+    // Result stored in this array, follow the parent, can print all the needed edges
+    val parent = IntArray(vertices) { -1 }
+    
+    // Init heap class
+    val heap = Heap(vertices)
+    
+    // Store MST weight
+    var weights = 0L
+    
+    // Fill up adj list
+    repeat(edges) {
+        val (u, v, w) = r.readLine()!!.split(" ").map { it.toInt() }
+        adj[u] += Node(v, w)
+        adj[v] += Node(u, w)
+    }
+
+    // Start at vertices 0, change the weight to 0
+    heap.h[0].weight = 0
+    
+    // Loop once, heap size decrease 1, until heap is empty
+    while (heap.isNotEmpty()) {
+        
+        // Get the min value, update weights
+        val (u, w) = heap.pop()
+        weights += w
+        
+        // After pop, heapify it
+        heap.heapify()
+        
+        // Loop each neighbor, if it is in heap and edgeWeight is lass than weight in heap
+        // update the weight in heap, change the parent of it to u, also bubble up
+        adj[u].forEach { (v, weight) ->
+            if (heap.isInHeap(v) && weight < heap.h[v].weight) {
+                heap.h[v].weight = weight
+                parent[v] = u
+                heap.bubbleUp(v)
+            }
+        }
+    }
+
+    // Final step to print out MST
+    for (i in 0 until vertices){
+        println("$i ${parent[i]}")
+    }
+}
