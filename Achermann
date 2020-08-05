@@ -1,0 +1,20 @@
+import java.math.BigInteger
+
+fun Achermann(m: BigInteger, n: BigInteger): BigInteger = when {
+    m == BigInteger.ZERO -> n + BigInteger.ONE
+    n == BigInteger.ZERO -> Achermann(m - BigInteger.ONE, BigInteger.ONE)
+    else -> Achermann(m - BigInteger.ONE, Achermann(m, n - BigInteger.ONE))
+}
+
+fun main() {
+    (0..4).forEach { i ->
+        (0..4).forEach { j ->
+            println(
+                "Achermann($i, $j) is ${Achermann(
+                    BigInteger.valueOf(i.toLong()),
+                    BigInteger.valueOf(j.toLong())
+                )}"
+            )
+        }
+    }
+}
