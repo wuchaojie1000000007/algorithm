@@ -1,45 +1,37 @@
-// Find first index such that array[index] > x.
-fun bns(array: IntArray, x: Int): Int {
-    var l = 0
-    var r = array.size
-    while (r > l) {
-        val mid = l + (r - l) / 2
-        when {
-            array[mid] < x -> l = mid + 1
-            array[mid] == x -> l += 1
-            array[mid] > x -> r = mid
+fun main() {
+    // Find first index such that array[index] >= x.
+    fun bns(array: IntArray, x: Int): Int {
+        var l = 0
+        var r = array.size
+        while (r > l) {
+            val mid = l + (r - l) / 2
+            when {
+                array[mid] < x -> l = mid + 1
+                array[mid] >= x -> r = mid
+            }
         }
+        return l
     }
-    return l
-}
-
-// Find first index such that array[index] >= x.
-fun bs(array: IntArray, x: Int): Int {
-    if (x > array.last()) return -1
-    var l = 0
-    var r = array.size
-    while (r > l) {
-        val mid = l + (r - l) / 2
-        when {
-            array[mid] < x -> l = mid + 1
-            array[mid] == x -> r -= 1
-            array[mid] > x -> r = mid
+    // Find first index such that array[index] > x.
+    fun bis(array: IntArray, x: Int): Int {
+        var l = 0
+        var r = array.size
+        while (r > l) {
+            val mid = l + (r - l) / 2
+            when {
+                array[mid] <= x -> l = mid + 1
+                array[mid] > x -> r = mid
+            }
         }
+        return l
     }
-    return l
-}
-
-// Find last index such that array[index] < x.
-fun bis(array: IntArray, x: Int): Int {
-    var l = 0
-    var r = array.size
-    while (r > l) {
-        val mid = l + (r - l) / 2
-        when {
-            array[mid] < x -> l = mid + 1
-            array[mid] == x -> r -= 1
-            array[mid] > x -> r = mid
-        }
-    }
-    return l-1
+    
+    val arr = intArrayOf(1, 2, 2, 2, 4)
+    // 1  array[index] >= x
+    println(bns(arr, 2))
+    // 4  array[index] > x
+    println(bis(arr, 2))
+    // 0  last index that array[index] < x
+    println(bns(arr, 2)-1)
+    
 }
