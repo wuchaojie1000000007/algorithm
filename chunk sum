@@ -6,8 +6,9 @@
     fun sum(start: Int, end: Int): Long {
         val startChunk = start / sq
         val endChuck = end / sq
+        if (startChunk!=endChuck){
         val sum1 = (start..(startChunk+1)*sq-1).fold(0L){acc, i -> acc + book[i]}
         val sum2 = (endChuck*sq..endChuck).fold(0L){acc, i -> acc + book[i]}
         val sum3 = (startChunk+1..endChuck-1).fold(0L){acc, i -> acc + chunk[i]}
-        return sum1 + sum2 + sum3
+        return sum1 + sum2 + sum3} else return (start..end).fold(0L){acc, i -> acc+book[i] }
     }
