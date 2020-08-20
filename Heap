@@ -1,94 +1,100 @@
-// Heap for min. can change to support max and no only for Int, also other class
-class Heap(vararg number: Int) {
+data class A(val le: Int, val ri: Int) : Comparable<A> {
+    override fun compareTo(other: A) = if ((this.ri - this.le) - (other.ri - other.le) != 0)
+        (other.ri - other.le) - (this.ri - this.le) else this.le - other.le
+}
 
-    var list: MutableList<Int> = mutableListOf()
+// Heap for min. can change to support max and no only for Int, also other class
+class Heap(vararg a: A) {
+
+    var size = 0
+    var l: MutableList<A> = mutableListOf()
 
     init {
-        for (num in number) {
-            insert(num)
+        for (obj in a) {
+            insert(obj)
         }
     }
+
+    fun isNotEmpty() = size != 0
 
     // Insert a new value.
-    fun insert(int: Int): MutableList<Int> {
-        
+    fun insert(obj: A): MutableList<A> {
+
         // Insert to last one.
-        list.add(list.size, int)
-        var newIntIndex = list.size - 1
+        l.add(l.size, obj)
+        var i = l.size - 1
+        size++
 
         // If child smaller than parent, then bubble up
-        while (list[newIntIndex] < list[(newIntIndex - 1) / 2]) {
-            list[newIntIndex] = list[(newIntIndex - 1) / 2].also {
-                list[(newIntIndex - 1) / 2] = list[newIntIndex]
-            }
-            newIntIndex = (newIntIndex - 1) / 2
+        while (l[i] < l[(i - 1) / 2]) {
+            l[i] = l[(i - 1) / 2].also { l[(i - 1) / 2] = l[i] }
+            i = (i - 1) / 2
         }
-        
+
         // Return inserted list
-        return list
+        return l
     }
 
-    // Just change the value and reture, did not delete the min value
-    fun popMin(): Int {
-        list[0] = list[list.size - 1].also({ list[list.size - 1] = list[0] })
-        return list[list.size - 1]
+    // Just change the value and return, did not delete the min value
+    fun popMin(): A {
+        l[0] = l[l.size - 1].also { l[l.size - 1] = l[0] }
+        val ans = l.removeAt(size-- - 1)
+        reArrange()
+        return ans
     }
 
     // After swap first and last, rearrange heap list.
-    fun reArrange(): MutableList<Int> {
-
-        // Remove the min value
-        list.removeAt(list.size-1)
+    fun reArrange(): MutableList<A> {
 
         // Init loop
-        var newIndex = 0
+        var j = 0
 
         // Check if have left child
-        while (2 * newIndex + 1 < list.size) {
+        while (2 * j + 1 < l.size) {
             when {
 
-                // Check if have right child and bigger than minof child
-                2 * newIndex + 2 < list.size && list[newIndex] > minOf(
-                    list[2 * newIndex + 1],
-                    list[2 * newIndex + 2]
+                // Check if have right child and bigger than min of child
+                2 * j + 2 < l.size && l[j] > minOf(
+                    l[2 * j + 1],
+                    l[2 * j + 2]
                 ) ->
                     when {
 
                         // Swap left child
-                        list[2 * newIndex + 1] < list[2 * newIndex + 2] -> {
-                            list[newIndex] =
-                                list[2 * newIndex + 1].also {
-                                    list[2 * newIndex + 1] = list[newIndex]
+                        l[2 * j + 1] < l[2 * j + 2] -> {
+                            l[j] =
+                                l[2 * j + 1].also {
+                                    l[2 * j + 1] = l[j]
                                 }
-                            newIndex = 2 * newIndex + 1
+                            j = 2 * j + 1
                         }
 
                         // Swap right child
-                        list[2 * newIndex + 1] >= list[2 * newIndex + 2] -> {
-                            list[newIndex] =
-                                list[2 * newIndex + 2].also {
-                                    list[2 * newIndex + 2] = list[newIndex]
+                        l[2 * j + 1] >= l[2 * j + 2] -> {
+                            l[j] =
+                                l[2 * j + 2].also {
+                                    l[2 * j + 2] = l[j]
                                 }
-                            newIndex = 2 * newIndex + 2
+                            j = 2 * j + 2
                         }
                     }
 
                 // Only have left child and bigger than it
-                2 * newIndex + 1 == list.size &&  list[newIndex] > list[2 * newIndex + 1] -> {
+                2 * j + 1 == l.size - 1 && l[j] > l[2 * j + 1] -> {
 
                     // Swap left child
-                    list[newIndex] =
-                        list[2 * newIndex + 1].also {
-                            list[2 * newIndex + 1] = list[newIndex]
+                    l[j] =
+                        l[2 * j + 1].also {
+                            l[2 * j + 1] = l[j]
                         }
-                    newIndex = 2 * newIndex + 1
+                    j = 2 * j + 1
                 }
 
-                // Have 2 child and {smaller than/ equal to} minof them or have left child and {smaller than/ equal to} it
-                else -> return list
+                // Have 2 child and {smaller than/ equal to} min of them or have left child and {smaller than/ equal to} it
+                else -> return l
             }
         }
         // Do not have child and done
-        return list
+        return l
     }
 }
