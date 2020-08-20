@@ -1,1 +1,59 @@
 
+// Work for operation like sum product xor.
+class BITree(arr: IntArray) {
+
+    private val a = IntArray(arr.size + 1) { 0 }
+
+    init {
+        for (i in 0..arr.size-1){
+            insert(i+1, arr[i])
+        }
+    }
+
+    // use 1 based index
+    fun insert(i: Int, value: Int) {
+        var j = i
+        while (j<a.size){
+            a[j] += value
+            j += j and -j
+        }
+    }
+
+    // use 1 based index
+    fun sum(i:Int):Int{
+        var ans = 0
+        var j = i
+        while (j>0){
+            ans += a[j]
+            j -= j and -j
+        }
+        return ans
+    }
+
+    fun sum(i:Int, j:Int) = sum(j)-sum(i-1)
+}
+
+fun main() {
+    val arr = intArrayOf(1, 2, 3, 4, 5, 6, 7)
+    val bit = BITree(arr)
+    for (i in 1..arr.size){
+        println(bit.sum(i))
+    }
+    for (i in 0..arr.size-1){
+        for (j in i..arr.size-1){
+            println("sum: ${arr.copyOfRange(i, j+1).sum()}  compute: ${bit.sum(i+1, j+1)}")
+        }
+    }
+    val ind = 7
+    bit.insert(ind, -1)
+    arr[ind-1]--
+    println()
+    var same = true
+    for (i in 0..arr.size-1){
+        for (j in i..arr.size-1){
+            println("sum: ${arr.copyOfRange(i, j+1).sum()}  compute: ${bit.sum(i+1, j+1)}")
+            if (arr.copyOfRange(i, j+1).sum()!=bit.sum(i+1, j+1)) same = false
+        }
+    }
+    println(if (same) "SAME" else "NO")
+}
