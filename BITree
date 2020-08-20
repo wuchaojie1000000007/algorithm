@@ -2,6 +2,12 @@
 class BITree(arr: IntArray) {
     private val a = IntArray(arr.size + 1) { 0 }
 
+    init {
+        for (i in 0..arr.size-1){
+            insert(i, arr[i])
+        }
+    }
+
     fun insert(i: Int, value: Int) {
         var j = i+1
         while (j<=a.size){
@@ -26,7 +32,6 @@ class BITree(arr: IntArray) {
 fun main() {
     val arr = intArrayOf(1, 2, 3, 4)
     val bit = BITree(arr)
-    for (i in 0..arr.size-1){bit.insert(i, arr[i])}
     for (i in 0..arr.size-1){
         println(bit.sum(i))
     }
