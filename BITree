@@ -1,0 +1,34 @@
+// Work for operation like sum product xor.
+class BITree(arr: IntArray) {
+    private val a = IntArray(arr.size + 1) { 0 }
+
+    fun insert(i: Int, value: Int) {
+        var j = i+1
+        while (j<=a.size){
+            a[j] += value
+            j += j and -j
+        }
+    }
+
+    fun sum(i:Int):Int{
+        var ans = 0
+        var j = i+1
+        while (j>0){
+            ans += a[j]
+            j -= j and -j
+        }
+        return ans
+    }
+
+    fun sum(i:Int, j:Int) = sum(j)-sum(i-1)
+}
+
+fun main() {
+    val arr = intArrayOf(1, 2, 3, 4)
+    val bit = BITree(arr)
+    for (i in 0..arr.size-1){bit.insert(i, arr[i])}
+    for (i in 0..arr.size-1){
+        println(bit.sum(i))
+    }
+    println(bit.sum(1, 3))
+}
