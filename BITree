@@ -1,5 +1,6 @@
 
 // Work for operation like sum product xor.
+// Init, input is array as normal.
 class BITree(arr: IntArray) {
 
     private val a = IntArray(arr.size + 1) { 0 }
@@ -10,7 +11,7 @@ class BITree(arr: IntArray) {
         }
     }
 
-    // use 1 based index
+    // use 1 based index. Means when you insert some value, change your i as i+1.
     fun insert(i: Int, value: Int) {
         var j = i
         while (j<a.size){
@@ -19,7 +20,7 @@ class BITree(arr: IntArray) {
         }
     }
 
-    // use 1 based index
+    // use 1 based index. Means when you insert some value, change your i as i+1.
     fun sum(i:Int):Int{
         var ans = 0
         var j = i
@@ -29,7 +30,8 @@ class BITree(arr: IntArray) {
         }
         return ans
     }
-
+    
+    // use 1 based index. Means when you insert some value, change your i as i+1.
     fun sum(i:Int, j:Int) = sum(j)-sum(i-1)
 }
 
