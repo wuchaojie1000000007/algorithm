@@ -1,0 +1,42 @@
+fun binomialcoeff(n: Long, k: Long) =
+    (1..minOf(k, n - k)).fold(1L)
+    { ans, i -> ans * (n - i + 1) / i }
+    
+    
+fun catalan(i:Long) = binomialcoeff(i*2, i)/(i+1)
+
+
+fun catalan(i: Int, mod: Long = 1000000007L): Long {
+    // Store which value has been computed
+    val visited = BooleanArray(i + 1) { false }
+    // Store ans
+    val ans = LongArray(i + 1)
+    fun cat(j: Int): Long =
+        when {
+            j == 0 -> 1
+            visited[j] -> ans[j]
+            else -> {
+                val a = (0 until j).fold(0L) { acc, k -> (acc + cat(k) * cat(j - 1 - k)) % mod }
+                visited[j] = true
+                ans[j] = a
+                ans[j]
+            }
+        }
+    cat(i)
+    return ans[i]
+}
+
+
+fun pow(base: Long, pow: Long, mod: Long = 1000000007L): Long {
+    var ans = 1L
+    var e = pow
+    var multi = base
+    while (e > 0) {
+        if (e % 2 == 1L) {
+            ans = (ans * multi) % mod
+        }
+        multi = (multi * multi) % mod
+        e /= 2
+    }
+    return ans
+}
