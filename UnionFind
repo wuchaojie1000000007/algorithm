@@ -1,0 +1,69 @@
+class UnionFind(private val size: Int) {
+
+    // Used to track the size of each of the component
+    private val sz = IntArray(size) { 1 }
+
+    // id[i] points to the parent of i, if id[i] = i then i is a root node
+    private val id = IntArray(size) { it + 1 }
+
+    // Tracks the number of components in the union find
+    private var numComponent = size
+
+    // Find which component/set 'p' belongs to, amortized constant time.
+    fun find(p: Int): Int {
+
+        // Find the root of the component/set
+        var root = p
+        while (root != id[p]) root = id[root]
+
+        // Compress the path leading back to the root.
+        // Doing this operation is called "path compression"
+        // and is what gives us amortized time complexity.
+        var c = p
+        while (c != root) {
+            val next = id[p]
+            id[next] = root
+            c = next
+        }
+
+        return root
+    }
+
+    // Recursive find the parent, do not compress path
+    //tailrec fun find(p:Int):Int = if (p == id[p]) p else find(id[p])
+
+    // Return whether or not the element 'p' ans
+    // 'q' are in the same component/set
+    fun connected(i: Int, j: Int) = find(i) == find(j)
+
+    // Return the size of the component/set 'p' belongs to
+    fun componentSize(p: Int) = sz[find(p)]
+
+    // Return the number of elements in this UnionFind/Disjoint set
+    fun size() = size
+
+    // Return the number of remaining components/sets
+    fun components() = numComponent
+
+    // Unify the components/sets containing elements 'p' and 'q'
+    fun unify(p: Int, q: Int) {
+        
+        // These elements are already in the same group!
+        if (connected(p, q)) return
+        
+        val root1 = find(p)
+        val root2 = find(q)
+        // Merge smaller component/set into the larger one
+        if (sz[root1]<sz[root2]){
+            sz[root2] += sz[root1]
+            id[root1] = root2
+        } else{
+            sz[root1] += sz[root2]
+            id[root2] = root1
+        }
+        
+        // Since the roots found are different wo know that the
+        // number of components/sets has decreased by one
+        numComponent--
+    }
+}
