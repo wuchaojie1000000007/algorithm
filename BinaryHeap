@@ -1,0 +1,166 @@
+class BinaryHeap<T : Comparable<T>> {
+
+    // A dynamic array to track the elements inside the heap
+    private lateinit var heap: ArrayList<T>
+
+    // Construct a priority queue with an initial capacity, default capacity is 1
+    constructor(sz: Int = 1) {
+        heap = ArrayList(sz)
+    }
+
+    // Construct a priority queue using heapify in O(n) time,
+    constructor(vararg elems: T) {
+
+        val heapSize = elems.size
+        heap = ArrayList(heapSize)
+
+        // Place all element in heap
+        heap.addAll(elems)
+
+        // Heapify process, O(n)
+        (maxOf(0, heapSize / 2 - 1) downTo 0).forEach { sink(it) }
+    }
+
+    // Construct a priority queue
+    constructor(elems: Collection<T>) {
+
+        val heapSize = elems.size
+        heap = ArrayList(heapSize)
+
+        // Place all element of the given collection to the heap
+        heap.addAll(elems)
+
+        // Heapify process, O(n)
+        (maxOf(0, heapSize / 2 - 1) downTo 0).forEach { sink(it) }
+    }
+
+    // Returns true/false depending on if the priority queue is empty
+    private fun isEmpty() = size() == 0
+
+    // Clears everything inside the heap O(n)
+    fun clear() {
+        heap.clear()
+    }
+
+    // Return the size of teh heap
+    private fun size() = heap.size
+
+    // Return the value of the element with the lowest priority in this priority queue,
+    // If the priority queue is empty, null is returned.
+    fun peek(): T? = if (isEmpty()) null else heap[0]
+
+    // Removes the root of the heap, O(log(n))
+    fun poll() = removeAt(0)
+
+    // Test if an element is in the heap, O(n)
+    fun contains(elem: T) = heap.contains(elem)
+
+    // Adds an element to the priority queue, O(log(n))
+    fun add(elem: T) {
+
+        heap.add(elem)
+
+        val indexOfLastElem = size() - 1
+        swim(indexOfLastElem)
+    }
+
+    // Test if the value of node i <= node j, assume i & j are valid indices, O(1)
+    private fun less(i: Int, j: Int) = heap[i] <= heap[j]
+
+    // Perform bottom up node swim, O(log(n))
+    private fun swim(k: Int) {
+
+        var child = k
+
+        // Grab the index of the next parent node WRT to child
+        var parent = (child - 1) / 2
+
+        // Keep swimming while we have not reached the root and while
+        // we're less than our parent
+        while (child > 0 && less(child, parent)) {
+
+            // Exchange child with parent
+            swap(parent, child)
+
+            // Get new child and parent
+            child = parent
+            parent = (child - 1) / 2
+        }
+    }
+
+    // Top down node sink, O(log(n))
+    private fun sink(k: Int) {
+        var parent = k
+        val heapSize = size()
+        while (true) {
+            val left = 2 * parent + 1 // Left node
+            val right = 2 * parent + 2 // Right node
+            var smallest = left // Assume left is the smallest node of the two children
+
+            // Find which is smaller ? left or right
+            if (right < heapSize && less(right, left)) smallest = right
+
+            // Stop if we're outside the bounds of the tree
+            // or stop early if we cannot sink k any more
+            if (left >= heapSize || less(parent, smallest)) break
+
+            // Move down the tree following the smallest node
+            swap(parent, smallest)
+            parent = smallest
+        }
+    }
+
+    // Swap two nodes. Assume i & j are valid, O(1)
+    private fun swap(i: Int, j: Int) {
+        heap[i] = heap[j].also { heap[j] = heap[i] }
+    }
+
+    // Removes a particular element in the heap, O(n)
+    fun remove(elem: T) = heap.remove(elem)
+
+    // Remove a node at a paticular index, O(log(n))
+    private fun removeAt(i: Int): T? {
+        if (isEmpty()) return null
+
+        val indexOfLastElem = size() - 1
+        val removedData = heap[i]
+        swap(i, indexOfLastElem)
+
+        // Obliterate the value
+        heap.removeAt(indexOfLastElem)
+
+        // Check if the last element was removed
+        if (i == indexOfLastElem) return removedData
+        val elem = heap[i]
+
+        // Try sinking element
+        sink(i)
+
+        // If sinking did not work try swimming
+        if (elem == heap[i]) swim(i)
+        return removedData
+    }
+
+    // Recursively check if this heap is a min heap
+    private fun isMinHeap(k: Int): Boolean {
+        // if we are outside the bounds of the heap return true
+        val heapSize = size()
+        if (k >= heapSize) return true
+
+        val left = 2 * k + 1
+        val right = 2 * k + 2
+
+        // Make sure that the current node k is less than both of its children if they exist
+        if (left < heapSize && !less(k, left)) return false
+        if (right < heapSize && !less(k, right)) return false
+
+        // Recurse on both children to make sure they're also valid
+        return isMinHeap(left) && isMinHeap(right)
+    }
+
+    fun checkValid() {
+        println(if (isMinHeap(0)) "Is MinHeap" else "Something goes wrong!!!")
+    }
+
+    override fun toString() = heap.toString()
+}
