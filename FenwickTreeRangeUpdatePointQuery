@@ -1,0 +1,54 @@
+// Construct a Fenwick tree with an initial set of values.
+// The 'values' array MUST BE ONE BASED meaning values[0]
+// does not get used, O(n) construction.
+class FenwickTreeRangeUpdatePointQuery(val originalTree: LongArray) {
+
+    // The size of the array holding the Fenwick tree values
+    private var N = originalTree.size
+
+    init {
+        originalTree[0] = 0
+        (1 until N).forEach {
+            val parent = it + lsb(it)
+            if (parent < N) originalTree[parent] += originalTree[it]
+        }
+    }
+
+    // The current tree will contain the updated range values
+    private val currentTree = originalTree.clone()
+
+    // Update the interval [left, right] with the value 'value'
+    fun updateRange(left: Int, right: Int, value: Long) {
+        add(left, value)
+        add(right + 1, -value)
+    }
+
+    // Add 'value' to index 'index' and all the ranges responsible for 'i', O(log(n))
+    private fun add(index: Int, value: Long) {
+        var i = index
+        while (i < N) {
+            currentTree[i] += value
+            i += lsb(i)
+        }
+    }
+
+    // Get the value at a specific index. The logic behind this method is the
+    // same as finding the prefix sum in a Fenwick tree except that you need to
+    // take the difference between the current tree and the original to get
+    // the point value.
+    fun get(i: Int) = prefixSum(i, currentTree) - prefixSum(i - 1, originalTree)
+
+    // Computes the prefix sum from [1, i], O(log(n))
+    private fun prefixSum(index: Int, tree: LongArray): Long {
+        var i = index
+        var sum = 0L
+        while (i != 0) {
+            sum += tree[i]
+            i -= lsb(i)
+        }
+        return sum
+    }
+
+    // Return the value of the least significant bit (LSB)
+    private fun lsb(i: Int) = i and -i
+}
