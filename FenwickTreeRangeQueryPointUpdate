@@ -1,0 +1,52 @@
+// Construct  a Fenwick tree with an initial set of values.
+// The 'values' array MUST BE ONE BASED meaning value[0]
+// does not get used, O(n) construction
+class FenwickTreeRangeQueryPointUpdate(private val tree: LongArray) {
+
+    // The size of the array holding the Fenwick tree value
+    private val N = tree.size
+
+    init {
+        tree[0] = 0
+        (1 until N).forEach {
+            val parent = it + lsb(it)
+            if (parent < N) tree[parent] += tree[it]
+        }
+    }
+
+    // Return the value of the least significant bit (LSB)
+    private fun lsb(i: Int) = i and -i
+
+    // Compute the prefix sum from [1, i], O(log(n))
+    private fun prefixSum(index: Int): Long {
+        var i = index
+        var sum = 0L
+        while (i != 0) {
+            sum += tree[i]
+            i -= lsb(i)
+        }
+        return sum
+    }
+
+    // Return the sum of interval [left, right], O(log(n))
+    fun sum(left: Int, right: Int) = prefixSum(right) - prefixSum(left - 1)
+
+    // Get the value at index i
+    fun get(i: Int) = sum(i, i)
+
+    // Add 'value' to index 'index', O(log(n))
+    fun add(index: Int, value: Long) {
+        var i = index
+        while (i < N) {
+            tree[i] += value
+            i += lsb(i)
+        }
+    }
+
+    // Set index i to be equal to v, O(log(n))
+    fun set(i:Int, v:Long){
+        add(i, v-sum(i, i))
+    }
+
+    override fun toString() = tree.toList().toString()
+}
