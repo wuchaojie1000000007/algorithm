@@ -14,10 +14,10 @@ class MinSparseTable(arr: IntArray) {
     private val logTwo = IntArray(n + 1) { 0 }
 
     // The sparse table values
-    private val dp = Array(pow + 1) { IntArray(n) }
+    private val dp = List(pow + 1) { MutableList(n){-1} }
 
     // Index table associated with the value in the sparse table
-    private val indexTable = Array(pow + 1) { IntArray(n) }
+    private val indexTable = List(pow + 1) { MutableList(n){-1} }
 
     init {
 
@@ -34,11 +34,11 @@ class MinSparseTable(arr: IntArray) {
         for (p in 1..pow) {
             var i = 0
             while (i + (1 shl p) <= n) {
-                if (dp[p - 1][i] <= dp[p - 1][i + (1 shl p - 1)]) {
+                if (dp[p - 1][i] >= dp[p - 1][i + (1 shl p - 1)]) {
                     dp[p][i] = dp[p - 1][i]
                     indexTable[p][i] = indexTable[p - 1][i]
                 } else {
-                    dp[p - 1][i] = dp[p - 1][i + (1 shl p - 1)]
+                    dp[p][i] = dp[p - 1][i + (1 shl p - 1)]
                     indexTable[p][i] = indexTable[p - 1][i + (1 shl p - 1)]
                 }
                 i++
@@ -51,7 +51,7 @@ class MinSparseTable(arr: IntArray) {
         val len = r - l + 1
         val p = logTwo[len]
         val k = 1 shl p // 2.pow(power)
-        return if (dp[p][l] <= dp[p][r - k + 1]) indexTable[p][l]
+        return if (dp[p][l] >= dp[p][r - k + 1]) indexTable[p][l]
         else indexTable[p][r - k + 1]
     }
 }
