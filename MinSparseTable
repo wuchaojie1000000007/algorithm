@@ -1,0 +1,57 @@
+import kotlin.math.floor
+import kotlin.math.log2
+
+// Sparse table for efficient minimum range queries in O(1) with O(log(n)) space
+class MinSparseTable(arr: IntArray) {
+
+    // The number of elements in the original input array
+    private val n = arr.size
+
+    // The maximum power of 2 needed.
+    private val pow = floor(log2(n.toDouble())).toInt()
+
+    // Fast log base 2 logarithm look up table, 1 <= i <= n
+    private val logTwo = IntArray(n + 1) { 0 }
+
+    // The sparse table values
+    private val dp = Array(pow + 1) { IntArray(n) }
+
+    // Index table associated with the value in the sparse table
+    private val indexTable = Array(pow + 1) { IntArray(n) }
+
+    init {
+
+        (0 until n).forEach {
+            dp[0][it] = arr[it]
+            indexTable[0][it] = it
+        }
+
+        (2 until n + 1).forEach {
+            logTwo[it] = log2(it.toDouble()).toInt()
+        }
+
+        // Build sparse table combining the value of the previous intervals
+        for (p in 1..pow) {
+            var i = 0
+            while (i + (1 shl p) <= n) {
+                if (dp[p - 1][i] <= dp[p - 1][i + (1 shl p - 1)]) {
+                    dp[p][i] = dp[p - 1][i]
+                    indexTable[p][i] = indexTable[p - 1][i]
+                } else {
+                    dp[p - 1][i] = dp[p - 1][i + (1 shl p - 1)]
+                    indexTable[p][i] = indexTable[p - 1][i + (1 shl p - 1)]
+                }
+                i++
+            }
+        }
+    }
+
+    // Return the index of the minimum element in the range [l, r]
+    fun minIndex(l: Int, r: Int): Int {
+        val len = r - l + 1
+        val p = logTwo[len]
+        val k = 1 shl p // 2.pow(power)
+        return if (dp[p][l] <= dp[p][r - k + 1]) indexTable[p][l]
+        else indexTable[p][r - k + 1]
+    }
+}
