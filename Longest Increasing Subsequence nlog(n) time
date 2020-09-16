@@ -1,0 +1,67 @@
+// Longest Increasing Subsequence in Time O(nlog(n)), space is O(n)
+fun main() {
+
+    //val sequence = intArrayOf(1, 2, 3, 7, 6, 5, 4, 8, 9, 3, 4, 5, 6, 7, 8)
+    val sequence = intArrayOf(1, 2, 3, -1, 0, 1, 2)
+
+    // Size of the sequence
+    val n = sequence.size
+
+    // Max length of sequence now finded.
+    var len = 0
+
+    // Both store index, first store parent to follow,
+    // second to store surface of length i+1. Do not use index 0.
+    val parent = IntArray(n) { -1 }
+    val surface = IntArray(n) { -1 }
+    surface[0] = 0
+
+    for (i in 1 until n) {
+        val value = sequence[i]
+        when {
+            // Bigger than the surface of longest sequence, put i on it
+            value > sequence[surface[len]] -> {
+                // Change parent of i
+                parent[i] = surface[len++]
+                // Put i in the surface
+                surface[len] = i
+            }
+
+            // Smaller than the surface of sequence of length one
+            value <= sequence[surface[0]] -> {
+                surface[0] = i
+            }
+
+            // Bigger than surface of length 0,
+            // Smaller than surface of longest length.
+            // Fit in between, binary search tha first value >= it,
+            // Insert i in it
+            value > sequence[surface[0]] -> {
+                var left = 1
+                var right = len
+                var cadidateIndex = -1
+                while (left <= right) {
+                    val mid = (left+right)/2
+                    if (value <= sequence[surface[mid]]) {
+                        cadidateIndex = mid
+                        right = mid - 1
+                    } else {
+                        left = mid + 1
+                    }
+                }
+                surface[cadidateIndex] = i
+                parent[i] = surface[cadidateIndex - 1]
+            }
+        }
+    }
+
+    println("Longest increasing subsequence's length is ${len + 1}")
+    val lis = MutableList(len + 1) { -1 }
+    var indForList = len
+    var indForParent = surface[len]
+    repeat(len + 1) {
+        lis[indForList--] = sequence[indForParent]
+        indForParent = parent[indForParent]
+    }
+    println("lis is $lis")
+}
