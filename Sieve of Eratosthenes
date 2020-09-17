@@ -17,7 +17,7 @@ class SieveOfEratosthenes(n: Int) {
                 var i = it
                 // Set sieve of a * it as it (where a >= 1)
                 // When looking for factor, just divide the value in sieve
-                while (i <= n) {
+                while (i <= n && sieve[i] == -1) {
                     sieve[i] = it
                     i += it
                 }
