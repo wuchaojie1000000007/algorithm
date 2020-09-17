@@ -1,0 +1,24 @@
+// F0 = 0, F1 = 1, Fn = Fn-1 + Fn-2.
+// The "addition" rule, Fn+k = Fk * Fn+1 + Fk-1 * Fn
+// Fast Doubling Method:
+//      F2k = Fk * (2*Fk+1 - Fk)
+//      F2k+1 = Fk+1 * Fk+1 + Fk * Fk
+
+// Return Pair(Fn, Fn+1)
+fun fib(n: Int): Pair<Long, Long> {
+
+    // Base case.
+    if (n == 0) return Pair(0, 1)
+
+    val (x, y) = fib(n shr 1)
+    val c = x * (2 * y - x)
+    val d = y * y + x * x
+    return if (n % 2 == 0) Pair(c, d) else Pair(d, d + c)
+}
+
+
+fun main() {
+    val r = System.`in`.bufferedReader()
+    val sb = StringBuilder()
+    println(fib(10).first) // 55
+}
