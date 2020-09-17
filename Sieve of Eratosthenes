@@ -1,0 +1,46 @@
+// More memory, but offer factor.
+class SieveOfEratosthenes(n: Int) {
+
+    // Store smallest factor except 1
+    private val sieve = IntArray(n + 1) { -1 }
+
+    //
+    val prime = mutableListOf<Int>()
+
+    // Init sieve
+    init {
+        (2..n).forEach {
+            // Find a prime number
+            if (sieve[it] == -1) {
+                // Add it to list
+                prime += it
+                var i = it
+                // Set sieve of a * it as it (where a >= 1)
+                // When looking for factor, just divide the value in sieve
+                while (i <= n) {
+                    sieve[i] = it
+                    i += it
+                }
+            }
+        }
+    }
+
+    fun factorOf(i: Int): List<Int> {
+        val factor = mutableListOf<Int>()
+        var ind = i
+        while (sieve[ind] != -1) {
+            factor += sieve[ind]
+            ind /= sieve[ind]
+        }
+        return factor.reversed()
+    }
+}
+
+
+fun main() {
+    val r = System.`in`.bufferedReader()
+    val sb = StringBuilder()
+    val sieve = SieveOfEratosthenes(100)
+    println(sieve.factorOf(99)) // [3, 3, 11]
+    println(sieve.prime) // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+}
