@@ -1,0 +1,48 @@
+fun pow(base: Long, exp: Long, mod: Long): Long {
+    var res = 1L
+    var b = base % mod
+    var e = exp
+    while (e > 0) {
+        if (e % 2 == 1L) res = res * b % mod
+        b = b * b % mod
+        e = e shr 1
+    }
+    return res
+}
+
+// proof: https://cp-algorithms.com/algebra/primality_tests.html
+fun checkComposite(n: Long, a: Long, d: Long, s: Int): Boolean {
+    val x = pow(a, d, n)
+    if (x == 1L || x == n - 1) return false
+    for (r in 1 until s) {
+        val y = x * x % n
+        if (y == n - 1) return false
+    }
+    return true
+}
+
+// Return true if n is prime, else return false
+fun MillerRabin(n: Long): Boolean {
+    if (n < 2) return false
+
+    // n - 1 = 2.pow(s) * d
+    var s = 0
+    var d = n - 1
+    while (d % 2 > 0) {
+        d = d shr 1
+        s++
+    }
+
+    val smallPrime = listOf(2L, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    for (a in smallPrime){
+        if (n == a) return true
+        if (checkComposite(n, a, d, s)) return false
+    }
+    return true
+}
+
+fun main() {
+    val r = System.`in`.bufferedReader()
+    val sb = StringBuilder()
+    println(MillerRabin(1000000007L)) //true
+}
