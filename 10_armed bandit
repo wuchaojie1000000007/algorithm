@@ -5,8 +5,6 @@ import time
 each_run_step = 1000
 run_time = 1
 
-print("start")
-
 
 class TestBed:
     # the mean value of each action
@@ -46,7 +44,7 @@ class TestBed:
     def update_reward(self, reward):
         self.total_reward += reward
 
-    def step(self, time):
+    def step(self, times):
         # find action which lead to max value
         greedy_action = self.action_value.argmax()
 
@@ -64,7 +62,7 @@ class TestBed:
         # update the reward function
         self.update_action_value(action, reward)
         # update optimal action count
-        self.update_optimal_action_count(action, time)
+        self.update_optimal_action_count(action, times)
 
         return self.total_reward
 
@@ -129,4 +127,5 @@ def show_optimal_action():
 show_optimal_action()
 # show_average_reward()
 
+# when picture closed, then program stop.
 print(f"total time is {time.time() - start_time}")
