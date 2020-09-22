@@ -1,25 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+
+each_run_step = 1000
+run_time = 1
+
+print("start")
 
 
 class TestBed:
-    # underlying value
+    # the mean value of each action
     mean = [0.2, -0.4, 1.5, 0.3, 1.2, -1.5, -0.1, -1, 0.8, -0.4]
-    # store action value, update frequently, init 0.0
-    action_value = np.zeros(10)
-    # store how many time action be chosen
-    action_choose_time = np.zeros(10)
+
     # accumulate reward, for compare model
     total_reward = 0
+
     # optimal action count (when action = 2)
-    optimal_action = np.zeros(1000)
+    optimal_action = np.zeros(each_run_step)
     optimal_cnt = 0
 
-    def __init__(self, epsilon=0.0):
+    # default greedy, moving average and step size is 0.1, init realistic
+    def __init__(self, epsilon=0.0, moving=True, init_action_value=0.0, step_size=0.1):
         self.epsilon = epsilon
-
-    def increase_choose_time(self, action):
-        self.action_choose_time[action] += 1
+        self.moving = moving
+        self.action_value = np.ones(10) * init_action_value
+        self.step_size = step_size
 
     # action in [0, 9]
     def compute_reward(self, action):
@@ -28,17 +33,18 @@ class TestBed:
     # update action value after one step.
     # new value = old value + step size * error
     def update_action_value(self, action, value):
-        self.action_value[action] += 1 / self.action_choose_time[action] * (value - self.action_value[action])
-
-    # update total reward
-    def update_reward(self, reward):
-        self.total_reward += reward
+        self.action_value[action] += self.step_size * (
+                value - self.action_value[action])
 
     # update optimal action percentage and count
     def update_optimal_action_count(self, action, time_step):
         if action == 2:
             self.optimal_cnt += 1
         self.optimal_action[time_step] = self.optimal_cnt / (time_step + 1)
+
+    # update total reward
+    def update_reward(self, reward):
+        self.total_reward += reward
 
     def step(self, time):
         # find action which lead to max value
@@ -51,54 +57,48 @@ class TestBed:
             action = np.random.randint(0, 10)
 
         # do action, get reward
-        self.increase_choose_time(action)
-        self.update_optimal_action_count(action, time)
         reward = self.compute_reward(action)
 
         # update total reward
         self.update_reward(reward)
         # update the reward function
         self.update_action_value(action, reward)
+        # update optimal action count
+        self.update_optimal_action_count(action, time)
 
         return self.total_reward
 
     def run(self):
-        return [self.step(x) / (x + 1) for x in range(1000)]
+        return [self.step(x) / (x + 1) for x in range(each_run_step)]
 
+
+start_time = time.time()
 
 # init array
-optimal_0 = np.zeros(1000)
-optimal_01 = np.zeros(1000)
-optimal_001 = np.zeros(1000)
-reward_0 = np.zeros(1000)
-reward_01 = np.zeros(1000)
-reward_001 = np.zeros(1000)
-
-# perform 2000 runs, each run contains 1000 step.
-run_time = 2000
+reward1 = np.zeros(each_run_step)
+reward2 = np.zeros(each_run_step)
+op1 = np.zeros(each_run_step)
+op2 = np.zeros(each_run_step)
+label1 = "realistic, ep = 0.1"
+label2 = "optimistic, ep = 00"
 
 for i in range(run_time):
-    epsilon_0 = TestBed()
-    epsilon_01 = TestBed(0.1)
-    epsilon_001 = TestBed(0.01)
+    epsilon_01_0 = TestBed(epsilon=0.1, init_action_value=0)
+    reward1 += epsilon_01_0.run()
+    op1 += epsilon_01_0.optimal_action
 
-    reward_0 += epsilon_0.run()
-    optimal_0 += epsilon_0.optimal_action
-    reward_01 += epsilon_01.run()
-    optimal_01 += epsilon_01.optimal_action
-    reward_001 += epsilon_001.run()
-    optimal_001 += epsilon_001.optimal_action
+    epsilon_0_5 = TestBed(epsilon=0, init_action_value=5)
+    reward2 += epsilon_0_5.run()
+    op2 += epsilon_0_5.optimal_action
 
-step = [x + 1 for x in range(1000)]
+step = [x + 1 for x in range(each_run_step)]
 
 
 def show_average_reward():
     plt.xkcd()
 
-    plt.plot(step, reward_0 / run_time, label="greedy")
-    plt.plot(step, reward_01 / run_time, label="epsilon = 0.1")
-    plt.plot(step, reward_001 / run_time, label="epsilon = 0.01")
-
+    plt.plot(step, reward1 / run_time, label=label1)
+    plt.plot(step, reward2 / run_time, label=label2)
     plt.xlabel("time step")
     plt.ylabel("Average reward")
     plt.title(f"10-armed bandit, average on {run_time} runs")
@@ -111,12 +111,10 @@ def show_average_reward():
 
 
 def show_optimal_action():
-    # plt.xkcd()
-    plt.style.use("ggplot")
+    plt.xkcd()
 
-    plt.plot(step, optimal_0 / run_time, label="greedy")
-    plt.plot(step, optimal_01 / run_time, label="epsilon = 0.1")
-    plt.plot(step, optimal_001 / run_time, label="epsilon = 0.01")
+    plt.plot(step, op1 / run_time, label=label1)
+    plt.plot(step, op2 / run_time, label=label2)
 
     plt.xlabel("time step")
     plt.ylabel("optimal action percentage")
@@ -128,5 +126,7 @@ def show_optimal_action():
     plt.show()
 
 
-# show_average_reward()
 show_optimal_action()
+# show_average_reward()
+
+print(f"total time is {time.time() - start_time}")
