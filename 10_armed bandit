@@ -6,9 +6,9 @@ class TestBed:
     # underlying value
     mean = [0.2, -0.4, 1.5, 0.3, 1.2, -1.5, -0.1, -1, 0.8, -0.4]
     # store action value, update frequently, init 0.0
-    action_value = [0.0] * 10
+    action_value = np.zeros(10)
     # store how many time action be chosen
-    action_choose_time = [0] * 10
+    action_choose_time = np.zeros(10)
     # accumulate reward, for compare model
     total_reward = 0
     # optimal action count (when action = 2)
@@ -25,17 +25,10 @@ class TestBed:
     def compute_reward(self, action):
         return np.random.randn() + self.mean[action]
 
-    # compute all reward got through choose action "action" till now
-    def all_reward(self, action):
-        return self.action_value[action] * self.action_choose_time[action]
-
-    # return action's chosen time plus one
-    def step_plus_one(self, action):
-        return self.action_choose_time[action] + 1
-
-    # update action value after one step
+    # update action value after one step.
+    # new value = old value + step size * error
     def update_action_value(self, action, value):
-        self.action_value[action] = (self.all_reward(action) + value) / self.step_plus_one(action)
+        self.action_value[action] += 1 / self.action_choose_time[action] * (value - self.action_value[action])
 
     # update total reward
     def update_reward(self, reward):
@@ -49,11 +42,10 @@ class TestBed:
 
     def step(self, time):
         # find action which lead to max value
-        max_value = max(self.action_value)
-        max_value_action = self.action_value.index(max_value)
+        greedy_action = self.action_value.argmax()
 
         # probability epsilon random choose action
-        action = max_value_action
+        action = greedy_action
         if np.random.random() < self.epsilon:
             # [low, high)
             action = np.random.randint(0, 10)
