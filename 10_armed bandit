@@ -2,26 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-each_run_step = 1000
-run_time = 100
+each_run_step = 2000
+run_time = 1000
 
 
 class TestBed:
 
     # default greedy, moving average and step size is 0.1, init realistic
-    def __init__(self, epsilon=0.0, epsilon_greedy=True, moving=True, init_action_value=0.0, step_size=0.1,
-                 preference_step_size=0.1,
+    def __init__(self, epsilon=0.0, epsilon_greedy_choose=False, moving=True, init_action_value=0.0, step_size=0.1,
+                 preference_step_size=0.1, ucb_step_size=0.1, preference_choose=False, ucb_choose=False
                  ):
         self.epsilon = epsilon
-        self.epsilon_greedy = epsilon_greedy
+        self.epsilon_greedy_choose = epsilon_greedy_choose
         self.moving = moving
         self.action_value = np.ones(10) * init_action_value
         self.step_size = step_size
+
         self.preference = np.zeros(10)
         self.preference_step_size = preference_step_size
+        self.preference_choose = preference_choose
 
         # should not know
-        self.mean = np.random.randn(10)+4
+        self.mean = np.random.randn(10)
         self.best_action = self.mean.argmax()
 
         # count reward and percent of optimal action has been chosen
@@ -29,8 +31,14 @@ class TestBed:
         self.optimal_action = np.zeros(each_run_step)
         self.optimal_cnt = 0
 
+        # use for upper confidence bound
+        self.ucb_count = np.zeros(10)
+        self.ucb_step_size = ucb_step_size
+        self.ucb_choose = ucb_choose
+
     # action in [0, 9]
     def compute_reward(self, action):
+        self.mean += 0.01 * np.random.randn(10)
         return np.random.randn() + self.mean[action]
 
     # update action value after one step.
@@ -77,20 +85,36 @@ class TestBed:
         probability[action] -= 1
         self.preference -= self.preference_step_size * diff * probability
 
+    def ucb_weight(self, steps):
+        if steps >= 10:
+            return self.ucb_step_size * np.sqrt(np.log(steps) / self.ucb_count)
+        else:
+            # 1e9
+            weight = np.ones(10) * 1000000000
+            for x in range(10):
+                if self.ucb_count[x] == 0:
+                    self.ucb_count[x] += 1
+                else:
+                    weight[x] = self.ucb_step_size * np.sqrt(np.log(steps) / self.ucb_count[x])
+            return weight
+
     def step(self, times):
 
         action = -1
         probability = np.zeros(10)
-        if self.epsilon_greedy:
+        if self.epsilon_greedy_choose:
             action = self.epsilon_greedy_action()
-        else:
+        elif self.preference_choose:
             probability = self.softmax()
             action = self.preference_action(probability)
+        else:
+            total_weight = self.action_value + self.ucb_weight(times)
+            action = total_weight.argmax()
 
         # do action, get reward
         reward = self.compute_reward(action)
 
-        if not self.epsilon_greedy:
+        if self.preference_choose:
             self.update_preference(action, reward, probability)
         # update total reward
         self.update_reward(reward)
@@ -111,21 +135,24 @@ class TestBed:
 start_time = time.time()
 
 # init array
-reward1 = np.zeros((1, each_run_step))
+epsilon_greedy_reward = np.zeros(each_run_step)
+epsilon_greedy_optimal_action = np.zeros(each_run_step)
+
+reward1 = np.zeros(each_run_step)
 reward2 = np.zeros(each_run_step)
 op1 = np.zeros(each_run_step)
 op2 = np.zeros(each_run_step)
-label1 = "step 0.1, 0.1"
-label2 = "step 0.1, 0.4"
+label1 = "ucb c=2"
+label2 = "epsilon = 0.1"
 
 for i in range(run_time):
-    epsilon_01_0 = TestBed(epsilon_greedy=False, step_size=0.1)
+    epsilon_01_0 = TestBed(ucb_choose=True, ucb_step_size=0.2)
     res = epsilon_01_0.run()
     # print(f"reward shape {reward1.shape} plus shape {len(res[0])}")
     reward1 += res
     op1 += epsilon_01_0.optimal_action
 
-    epsilon_0_5 = TestBed(epsilon_greedy=False, step_size=0.4, preference_step_size=0.1)
+    epsilon_0_5 = TestBed(epsilon_greedy_choose=True, epsilon=0.1, init_action_value=3)
     reward2 += epsilon_0_5.run()
     op2 += epsilon_0_5.optimal_action
 
@@ -165,7 +192,7 @@ def show_optimal_action():
 
 
 show_optimal_action()
-# show_average_reward()
+#show_average_reward()
 
 # when picture closed, then program stop.
 print(f"total time is {time.time() - start_time}")
