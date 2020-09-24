@@ -1,0 +1,303 @@
+import test
+import numpy as np
+
+point = 10
+k = 10
+step = 1000
+run_time = 1000
+parameter = np.geomspace(1 / 128, 4, num=10)
+epline = np.zeros(point)
+ucbline = np.zeros(point)
+gradient = np.zeros(point)
+optim = np.zeros(point)
+for i in range(point):
+    epline[i] = test.run_epsilon_greedy(action_num=k, epsilon=parameter[i], step=step, run_time=run_time)[
+                    0].sum() / step
+    optim[i] = test.run_epsilon_greedy(action_num=k, init_value=3, epsilon=parameter[i], step=step, run_time=run_time)[
+                   0].sum() / step
+    ucbline[i] = test.run_ucb(action_num=k, ucb_weight=parameter[i], step=step, run_time=run_time)[0].sum() / step
+    gradient[i] = test.run_gradient(action_num=k, preference_step_size=parameter[i])[0].sum() / step
+
+test.show_average_reward(step=step, run_time=run_time,
+                         epline="epsilon", optim="optimistic", ucbline="ucb", gradient="gradient")
+                         
+                         
+import numpy as np
+
+
+class EpsilonGreedyAgent:
+    def __init__(self, action_num, epsilon=0, step_size=0.1, init_value=0):
+        # action number for the agent
+        self.action_num = action_num
+        # epsilon is percentage of random choose action
+        self.epsilon = epsilon
+        # initial action value for each action
+        self.action_value = np.ones(self.action_num) * init_value
+        # step size for update action value
+        self.step_size = step_size
+
+    # return the action result to best reward base on action value
+    def greedy(self):
+        return self.action_value.argmax()
+
+    # return action based on epsilon greedy strategy
+    def epsilon_greedy(self):
+        # first greedy choose action
+        greedy_action = self.greedy()
+        action = greedy_action
+        # epsilon of the time random choose
+        if np.random.random() < self.epsilon:
+            action = np.random.randint(0, self.action_num)
+        return action
+
+    # choose action based on epsilon greedy strategy
+    def choose_action(self):
+        return self.epsilon_greedy()
+
+    # update action value after received reward for one action
+    def update(self, action, reward):
+        self.action_value[action] += self.step_size * (reward - self.action_value[action])
+        
+        
+        
+        
+import numpy as np
+
+
+class UpperConfidenceBoundAgent:
+    def __init__(self, action_num, step_size=0.1, ucb_weight=2, init_value=0):
+        # action number for the agent
+        self.action_num = action_num
+        # initial action value for each action
+        self.action_value = np.ones(self.action_num) * init_value
+        # step size for update action value
+        self.step_size = step_size
+
+        # count how many each action has execute
+        self.action_count = np.zeros(self.action_num)
+        # count how many action has execute
+        self.count = 0
+        # weight for ucb value
+        self.ucb_weight = ucb_weight
+
+    # weight for ucb value
+    def ucb(self):
+        # denominator is not zero
+        if self.count > self.action_num:
+            return self.ucb_weight * np.sqrt(np.log(self.count) / self.action_count)
+        # denominator is zero, when it's zero, ucb weight set to 1e9, otherwise compute it
+        else:
+            weight = np.ones(self.action_num) * 1000000000
+            for x in range(self.action_num):
+                if self.action_count[x] != 0:
+                    weight[x] = self.ucb_weight * np.sqrt(np.log(self.count) / self.action_count[x])
+            return weight
+
+    # choose action based on ucb strategy
+    def choose_action(self):
+        return (self.action_value + self.ucb()).argmax()
+
+    # update action value after received reward for one action
+    def update(self, action, reward):
+        self.action_value[action] += self.step_size * (reward - self.action_value[action])
+
+
+
+
+
+import numpy as np
+
+
+class GradientBanditAgent:
+    def __init__(self, action_num, preference_step_size=0.1, baseline=0):
+        # action number for the agent
+        self.action_num = action_num
+        # choose action based on preference value
+        self.preference = np.zeros(action_num)
+        # step size when update preference value
+        self.preference_step_size = preference_step_size
+        # baseline for update preference value
+        self.baseline = baseline
+        # store probability for update preference value
+        self.probability = np.zeros(self.action_num)
+
+    # map each preference to a float value, which sums to 1
+    def softmax(self):
+        # do not want big number, this operation do not influence result
+        if min(self.preference) > 0:
+            self.preference -= min(self.preference)
+        exp = np.exp(self.preference)
+        exp_sum = sum(exp)
+        probability = exp / exp_sum
+        self.probability = probability
+        return probability
+
+    # return preference action based on probability
+    def preference_action(self, probability):
+        return np.random.choice(self.action_num, 1, p=probability)
+
+    # return action based on preference
+    def choose_action(self):
+        probability = self.softmax()
+        action = self.preference_action(probability)
+        return action
+
+    # update internal value based on action chosen and reward received
+    def update(self, action, reward):
+        diff = reward - self.baseline
+        self.probability[action] -= 1
+        self.preference -= self.preference_step_size * diff * self.probability
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+import numpy as np
+
+
+class KArmBanditEnv:
+
+    def __init__(self, k=10, max_mean=1, std=1):
+        # number of actions can choose
+        self.k = k
+        # mean value evenly distributed [-max_mean, max_mean],
+        self.mean = (np.random.random(self.k) - 0.5) * 2 * max_mean
+        # optimal action in this run
+        self.optimal_action = self.mean.argmax()
+        # standard deviation for returned value for one action
+        self.std = std
+
+    # one step in the learning, return mean value plus some fluctuation
+    def evaluate(self, action):
+        return self.mean[action] + np.random.randn() / self.std
+        
+        
+        
+        
+        
+        
+        
+        
+        
+import numpy as np
+import matplotlib.pyplot as plt
+from k_arm_bandit_env import KArmBanditEnv
+from epsilon_greedy import EpsilonGreedyAgent
+from upper_confidence_bound import UpperConfidenceBoundAgent
+from gradient_bandit import GradientBanditAgent
+
+
+def run_epsilon_greedy(action_num, epsilon=0, step_size=0.1, init_value=0, step=1000, run_time=1000):
+    env = KArmBanditEnv()
+    agent = EpsilonGreedyAgent(action_num, epsilon=epsilon, step_size=step_size, init_value=init_value)
+    return runs(agent=agent, env=env, step=step, run_time=run_time)
+
+
+def run_ucb(action_num, step_size=0.1, ucb_weight=2, init_value=0, step=1000, run_time=1000):
+    env = KArmBanditEnv()
+    agent = UpperConfidenceBoundAgent(action_num, step_size=step_size, ucb_weight=ucb_weight, init_value=init_value)
+    return runs(agent=agent, env=env, step=step, run_time=run_time)
+
+
+def run_gradient(action_num, preference_step_size=0.1, baseline=0, step=1000, run_time=1000):
+    env = KArmBanditEnv()
+    agent = GradientBanditAgent(action_num, preference_step_size=preference_step_size, baseline=baseline)
+    return runs(agent=agent, env=env, step=step, run_time=run_time)
+
+
+def run(agent, env, step):
+    average_reward = np.zeros(step)
+    total_reward = 0
+    optimal_action_percent = np.zeros(step)
+    optimal_action = 0
+    for i in range(step):
+        action = agent.choose_action()
+        reward = env.evaluate(action)
+        agent.update(action=action, reward=reward)
+        total_reward += reward
+        if action == env.optimal_action:
+            optimal_action += 1
+        average_reward[i] = total_reward / (i + 1)
+        optimal_action_percent[i] = optimal_action / (i + 1)
+    return [average_reward, optimal_action_percent]
+
+
+def runs(agent, env, step, run_time):
+    average_reward = np.zeros(step)
+    optimal_action_percent = np.zeros(step)
+    for i in range(run_time):
+        [r, o] = run(agent, env, step)
+        average_reward += r
+        optimal_action_percent += o
+    average_reward /= run_time
+    optimal_action_percent /= run_time
+    return [average_reward, optimal_action_percent]
+
+
+def show_average_reward(step, run_time, **kwargs):
+    plt.xkcd()
+
+    for k, v in kwargs:
+        plt.plot(step, k, label=v)
+    plt.xlabel("time step")
+    plt.ylabel("Average reward")
+    plt.title(f"10-armed bandit, average on {run_time} runs")
+
+    plt.legend()
+
+    plt.tight_layout()
+    # plt.savefig("reward.png")
+    plt.show()
+
+
+def show_optimal_action(step, run_time, **kwargs):
+    plt.xkcd()
+
+    for k, v in kwargs:
+        plt.plot(step, k, label=v)
+
+    plt.xlabel("time step")
+    plt.ylabel("optimal action percentage")
+    plt.title(f"10-armed bandit, average on {run_time} runs")
+
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+
+
+
+
+import test
+import numpy as np
+
+point = 10
+k = 10
+step = 1000
+run_time = 1000
+parameter = np.geomspace(1 / 128, 4, num=10)
+epline = np.zeros(point)
+ucbline = np.zeros(point)
+gradient = np.zeros(point)
+optim = np.zeros(point)
+for i in range(point):
+    epline[i] = test.run_epsilon_greedy(action_num=k, epsilon=parameter[i], step=step, run_time=run_time)[
+                    0].sum() / step
+    optim[i] = test.run_epsilon_greedy(action_num=k, init_value=3, epsilon=parameter[i], step=step, run_time=run_time)[
+                   0].sum() / step
+    ucbline[i] = test.run_ucb(action_num=k, ucb_weight=parameter[i], step=step, run_time=run_time)[0].sum() / step
+    gradient[i] = test.run_gradient(action_num=k, preference_step_size=parameter[i])[0].sum() / step
+
+test.show_average_reward(step=step, run_time=run_time,
+                         epline="epsilon", optim="optimistic", ucbline="ucb", gradient="gradient")
