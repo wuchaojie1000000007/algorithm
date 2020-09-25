@@ -1,6 +1,6 @@
-fun binomialcoeff(n: Long, k: Long) =
+fun binomialcoeff(n: Long, k: Long) = if (n == 0L || n < k) 0L else
     (1..minOf(k, n - k)).fold(1L)
-    { ans, i -> ans * (n - i + 1) / i }
+    { ans, i -> ans * (n - i + 1) / i % mod }
     
     
 fun catalan(i:Long) = binomialcoeff(i*2, i)/(i+1)
