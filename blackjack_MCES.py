@@ -163,3 +163,69 @@ moving_average = 0.98
 gamma = 0.9
 # init env
 env = BlackJackEnv()
+
+
+# runs  int -> how many episode need generate
+def run(runs):
+    for i in range(runs):
+        episode = env.simulate()
+        index = len(episode) - 1
+        expectation = 0
+        while index > 0:
+            value = episode[index]
+            index -= 1
+            action = episode[index]
+            index -= 1
+            (player_sum, dealer_show, usable_ace) = episode[index]
+            index -= 1
+
+            expectation = gamma * expectation + value
+
+            assert 21 >= player_sum >= 12
+            assert 1 <= dealer_show <= 10
+            assert usable_ace == 1 or usable_ace == 0
+            assert action == 0 or action == 1
+
+            state_action_value[player_sum - 12][dealer_show - 1][usable_ace][action] = \
+                moving_average * state_action_value[player_sum - 12][dealer_show - 1][usable_ace][action] + \
+                (1 - moving_average) * expectation
+
+            greedy = (1 if state_action_value[player_sum - 12][dealer_show - 1][usable_ace][0] <
+                           state_action_value[player_sum - 12][dealer_show - 1][usable_ace][1] else 0)
+            if state_action_value[player_sum - 12][dealer_show - 1][usable_ace][0] < \
+                    state_action_value[player_sum - 12][dealer_show - 1][usable_ace][1]:
+                assert greedy == 1
+
+            env.policy[player_sum - 12][dealer_show - 1][usable_ace] = greedy
+
+
+# show_policy  true -> show policy, false -> show state value
+# with_usable_ace  0 -> without, 1 -> with
+def show_policy_or_state_value(show_policy, with_usable_ace):
+    value = np.zeros((10, 10))
+    for j in range(10):
+        for k in range(10):
+            if show_policy:
+                value[j][k] = env.policy[j][k][with_usable_ace]
+            else:
+                value[j][k] = max(state_action_value[j][k][with_usable_ace][0],
+                                  state_action_value[j][k][with_usable_ace][1])
+    ax = sns.heatmap(value, xticklabels=np.arange(10) + 1,
+                     yticklabels=np.arange(10) + 12, annot=True)
+    plt.xlabel("Dealer showing")
+    plt.ylabel("Player sum")
+    if show_policy:
+        if with_usable_ace == 1:
+            plt.title("Best policy with usable ace [0 mean stick while 1 mean hit]")
+        else:
+            plt.title("Best policy without usable ace [0 mean stick while 1 mean hit]")
+    else:
+        if with_usable_ace == 1:
+            plt.title("State value with usable ace")
+        else:
+            plt.title("State value without usable ace")
+    plt.show()
+
+
+run(100000)
+show_policy_or_state_value(False, 1)
